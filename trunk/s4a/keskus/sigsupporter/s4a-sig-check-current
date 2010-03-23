@@ -1,0 +1,26 @@
+#!/usr/bin/perl 
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+
+require "/var/www/sigsupporter/sighelper.pm";
+
+my $cur_tar;
+
+die "Error while detecting current sigset" unless get_current(\$cur_tar);
+
+if (!defined($cur_tar)) {
+	printf("No current ruleset found\n");
+}
+else {
+	my %cur_sidmap = ();
+	die "Error while extracting current sigset" unless get_sidmap($cur_tar, \%cur_sidmap);
+	my %alloc_table = ();
+	die "Error while loading current allocation table" unless get_rrd_allocation(\%alloc_table);
+	die "Corrupted allocation table" unless check_rrd_allocation(\%alloc_table, \%cur_sidmap);
+	print "Current OK!\n";
+}
+

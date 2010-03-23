@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+/bin/cat /var/www/tuvastaja/ipcounter/ipcounter.txt
+

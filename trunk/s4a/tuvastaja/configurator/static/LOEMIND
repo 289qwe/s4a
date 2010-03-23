@@ -1,0 +1,24 @@
+httpd.conf - httpd konfiguratsioon tuvastaja tarvis. Läheb failiks 
+/var/www/conf/httpd.conf
+
+mrtg.cfg - mrtg konfifail, läheb failiks /var/www/tuvastaja/mrtg/mrtg.cfg
+
+aliases - maili aliaste fail, läheb failiks /etc/mail/aliases
+
+nrpe.cfg - nrpe konfifail, läheb failiks /etc/nrpe.cfg
+
+nrpe.local.cfg - nrpe lokaalne konfifail, läheb failiks /etc/nrpe.local.cfg
+
+snmpd.conf - net-snmp konfifail, läheb failiks /etc/snmp/snmpd.conf
+
+sendmail_* - sendmaili konfifaili staatilised osad, lähevad failiks /usr/share/sendmail/cf/$hostname.mc
+
+syslog.conf - syslogi konfifail. läheb failiks /etc/syslog.conf
+
+newsyslog.conf - newsyslogi konfifail. läheb failiks /etc/newsyslog.conf
+
+sshd_config - ssh konfifail, läheb failiks /etc/ssh/sshd_config
+
+variables.conf - snorti lokaalse konfi staatiline osa, läheb failiks /var/www/tuvastaja/data/snort/localconf/variables.conf
+
+.bashrc ja .profile - root shellide konfifialid, lähevad failideks /root/.bashrc ja /root/.profile

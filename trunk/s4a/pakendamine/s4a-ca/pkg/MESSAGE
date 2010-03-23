@@ -1,0 +1,11 @@
+To set up s4a-ca software completely you have to export
+the S4A_CA_BIN environment variable executing the following
+command:
+
+	export S4A_CA_BIN=/usr/local/s4a-ca
+
+It is reccomended to add the line above to the user's ~/.profile file.
+
+
+After completing the tasks above your s4a ca should be up and
+ready to serve s4a centralservers and intrusion detectors.

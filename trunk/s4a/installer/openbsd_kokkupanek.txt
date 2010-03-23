@@ -1,0 +1,44 @@
+
+
+# Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+
+See dokument räägib, kuidas ehitada valmis openbsd pakid.
+
+Ehitamine käib testsnort.cyber.ee masinas, kuhu on installitud OpenBSD4.6
+baassüsteem.
+
+1. Kustuta /usr/src/ sisu, ehk
+rm -rf /usr/src/*
+2. Tõmba valmis sortsu ja system pakid ning paki need sinna lahti:
+for i in {src,sys}.tar.gz; do
+    ftp -o - -m ftp://ftp.estpak.ee//pub/OpenBSD/4.6/$i | tar xzf - -C /usr/src
+done
+
+3. Kopeeri dot.profile ja install.sh siit repositooriumist kompileerimis-
+masinasse järgmisse kohta:
+cp dot.profile install.sh /usr/src/distib/miniroot/
+
+dot.profile on fail, mis käivitub pärast plaadilt buutimist ning install.sh on
+nn installeerimisskript, mille dot.profile käivitab.
+Vajadusel muuda neid enne ning salvesta repositooriumis.
+
+4. Järgmised sammud kompileerivad sinu tehtud muudatused:
+rm -rf /usr/obj/*
+cd /usr/src && nice make obj
+cd /usr/src && nice time make build
+
+5. Ehita valmis OpenBSD pakid:
+export DESTDIR=/var/tmp/dest
+export RELEASEDIR=/var/tmp/release
+rm -rf $DESTDIR $RELEASEDIR
+mkdir -p $DESTDIR $RELEASEDIR
+cd /usr/src/etc && nice time make release
+cd /usr/src/distrib/sets && sh checkflist
+
+6. Mine tarnekataloogi ning kopeeri endale vajalikud pakid või tari need kokku.
+tar czf plaat.tgz INSTALL.i386 MD5 SHA256 base46.tgz bsd bsd.mp cdboot cdbr
+comp46.tgz etc46.tgz man46.tgz misc46.tgz pxeboot
+scp plaat.tgz user@hostname.cyber.ee:
+
+¦nitti on võetud siit:
+http://people.cs.uchicago.edu/~brendan/howtos/openbsd_install/

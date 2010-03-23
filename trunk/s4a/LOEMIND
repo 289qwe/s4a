@@ -1,0 +1,22 @@
+
+# Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+
+Väike SVN repo sisukord:
+
+installer - siin on meie openbsd installeri jupid ja jutud. olulised 
+	on dot.profile ja install.sh, mis tuleb installerisse sisse kompileerida.
+	install.site läheb site46.tgz sisse.
+
+keskus - siin on keskse haldusserveri tarkvara.
+
+keskus/ca - siin on sertifitseerimiskeskuse tarkvara.
+
+tuvastaja - siin on tuvastaja tarkvara
+
+paikamine - siin on tuvastajatele paikade väljaandmise tarkvara
+
+pakendamine - siin on bsd-pakettide koostamiseks vajalikud failid
+
+Keskserveri tarkvara "lähtekoodi" pakendamiseks on skript s4acentreports.sh.
+Tuvastaja tarkvara "lähtekoodi" pakendamiseks on skript s4adetectorports.sh.
+Sertifitseerimiskeskuse tarkvara "lähtekoodi" pakendamiseks on skript s4acaports.sh.

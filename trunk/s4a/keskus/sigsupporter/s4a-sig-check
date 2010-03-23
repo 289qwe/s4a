@@ -1,0 +1,80 @@
+#!/usr/bin/perl 
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+
+require "/var/www/sigsupporter/sighelper.pm";
+
+my $new_tar = $ARGV[0];
+my $cur_tar;
+
+if (! defined($new_tar)) {
+	die "No new sigset name was given on the commandline!";
+}
+
+die "Error while detecting current sigset" unless get_current(\$cur_tar);
+
+if (!defined($cur_tar)) {
+	printf("No current ruleset found\n");
+}
+
+if (! -e $new_tar) {
+	die "Cannot find $new_tar";
+}
+
+if (!check_sidfile($new_tar)) {
+	die "$new_tar is not proper sigset";
+}
+
+my %new_sidmap = ();
+my %cur_sidmap = ();
+
+if (defined($cur_tar)) {
+	die "Error while extracting current sigset" unless get_sidmap($cur_tar, \%cur_sidmap);
+}
+
+die "Error while extracting new sigset" unless get_sidmap($new_tar, \%new_sidmap);
+
+my $deleted_rules = 0;
+my $added_rules = 0;
+my $modified_rules = 0;
+my $new_rules = 0;
+my $cur_rules = 0; 
+
+foreach my $sid (keys(%cur_sidmap)) {
+	if (!defined($new_sidmap{$sid})) {
+		print "DELETE RULE: ($sid)\n";
+		print "\tCURRENT:\t$cur_sidmap{$sid}{'LINE'}\n";
+		$deleted_rules++;
+	}
+	else {
+		if (! ($cur_sidmap{$sid}{'LINE'} eq $new_sidmap{$sid}{'LINE'})) {
+			print "MODIFY RULE: ($sid)\n";
+			print "\tCURRENT:\t$cur_sidmap{$sid}{'LINE'}";
+			print "\tNEW:\t\t$new_sidmap{$sid}{'LINE'}\n";
+			$modified_rules++;
+		}
+	}
+	$cur_rules++;
+}
+
+foreach my $sid (keys(%new_sidmap)) {
+	if (!defined($cur_sidmap{$sid})) {
+		print "ADD RULE: ($sid)\n";
+		print "\tNEW:\t\t$new_sidmap{$sid}{'LINE'}\n";
+		$added_rules++;
+	}
+	$new_rules++;
+}
+
+print "DELETE:\t$deleted_rules operation(s)\n"; 
+print "MODIFY:\t$modified_rules operation(s)\n"; 
+print "ADD:\t$added_rules operation(s)\n\n"; 
+print "$cur_rules rules in current\n";
+print "$new_rules rules in new\n\n";
+print "If you are completely satisfied with the results then use s4a-sig-apply command to install the new ruleset\n";
+
+

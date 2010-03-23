@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+if [ ! -s $VAR_SMTP ]; then
+  exit 0
+fi
+
+SMTPHOST=`cat $VAR_SMTP`
+HOST=`cat $VAR_HOSTNAME`
+DOMAIN=`cat $VAR_DOMAIN`
+
+SENDMAILBEGIN=$CONFROOT/static/sendmail_begin
+SENDMAILEND=$CONFROOT/static/sendmail_end
+
+SENDMAILCF="/usr/share/sendmail/cf"
+
+if grep -q -R "$IPEXP" $VAR_SMTP; then
+  SMTPHOST="[$SMTPHOST]"
+fi
+
+
+cd $SENDMAILCF
+cat $SENDMAILBEGIN > $HOST.mc
+
+echo "define(\`SMART_HOST', \`$SMTPHOST')dnl" >> $HOST.mc
+echo "MASQUERADE_AS(\`$HOST.$DOMAIN')dnl" >> $HOST.mc
+echo "FEATURE(\`local_no_masquerade')dnl" >> $HOST.mc
+echo "FEATURE(\`masquerade_envelope')dnl" >> $HOST.mc
+
+cat $SENDMAILEND >> $HOST.mc
+
+m4 ../m4/cf.m4 $HOST.mc > /etc/mail/$HOST.cf
+
+if [ -f /etc/rc.conf.local ]; then
+  if ! grep -q -R "sendmail_flags=\"-L sm-mta -C/etc/mail/$HOST.cf -bd -q30m\"" /etc/rc.conf.local; then
+    echo "sendmail_flags=\"-L sm-mta -C/etc/mail/$HOST.cf -bd -q30m\"" >> /etc/rc.conf.local
+  fi
+else
+  echo "sendmail_flags=\"-L sm-mta -C/etc/mail/$HOST.cf -bd -q30m\"" > /etc/rc.conf.local
+fi

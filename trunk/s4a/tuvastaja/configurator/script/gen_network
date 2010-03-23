@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+DEV=`cat $VAR_IFACE`
+IP=`cat $VAR_IP_ADDRESS`
+MASK=`cat $VAR_SUBNET_MASK`
+
+NETHOST=/etc/hostname.$DEV
+
+# Set network interface 
+
+echo "inet $IP $MASK NONE" > $NETHOST
+chmod 640 $NETHOST

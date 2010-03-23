@@ -1,0 +1,14 @@
+@comment $OpenBSD$
+@man man/cat8/s4a-ca.0
+s4a-ca/
+s4a-ca/s4a-ca-check.sh
+s4a-ca/s4a-ca-create.sh
+s4a-ca/s4a-ca-passwd.sh
+s4a-ca/s4a-ca.cnf
+s4a-ca/s4a-central-cert.sh
+s4a-ca/s4a-central-request.sh
+s4a-ca/s4a-detector-cert.sh
+s4a-ca/s4a-detector-request.sh
+s4a-ca/s4a-patch-cert.sh
+s4a-ca/s4a-request-show.sh
+s4a-ca/util.sh

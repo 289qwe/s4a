@@ -1,0 +1,141 @@
+#!/usr/bin/perl 
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+use File::Copy;
+
+require "/var/www/sigsupporter/sighelper.pm";
+
+my $s4a_map = "/var/www/etc/s4a-map";
+my $sigdir = "/var/www/confserv/signatures";
+my $sigverfile = "current-";
+my $sigfile = "signatures-";
+my $verinfo = "4.6";
+
+my $new_tar = $ARGV[0];
+my $cur_tar;
+
+if (! defined($new_tar)) {
+	die "No new sigset name was given on the commandline!";
+}
+
+die "Error while detecting current sigset" unless get_current(\$cur_tar);
+
+if (!defined($cur_tar)) {
+	printf("No current ruleset found\n");
+}
+
+if (! -e $new_tar) {
+	die "Cannot find $new_tar";
+}
+
+if (!check_sidfile($new_tar)) {
+	die "$new_tar is not proper sigset";
+}
+
+my %new_sidmap = ();
+my %cur_sidmap = ();
+
+if (defined($cur_tar)) {
+	die "Error while extracting current sigset" unless get_sidmap($cur_tar, \%cur_sidmap);
+}
+
+die "Error while extracting new sigset" unless get_sidmap($new_tar, \%new_sidmap);
+
+my %cur_alloc_table = ();
+
+if (defined($cur_tar)) {
+	die "Error while loading current allocation table" unless get_rrd_allocation(\%cur_alloc_table);
+	die "Corrupted allocation table" unless check_rrd_allocation(\%cur_alloc_table, \%cur_sidmap);
+}
+
+foreach my $sid (keys(%cur_sidmap)) {
+	if (!defined($new_sidmap{$sid})) {
+		printf "Freeing slot $cur_alloc_table{$sid}{'RRD'}, $cur_alloc_table{$sid}{'DS'}\n";
+		delete $cur_alloc_table{$sid};
+	}
+	else {
+		if (! ($cur_sidmap{$sid}{'LINE'} eq $new_sidmap{$sid}{'LINE'})) {
+			$cur_alloc_table{$sid}{'MSG'} = $new_sidmap{$sid}{'MSG'};
+		}
+	}
+}
+
+my %used_slots = ();
+my $max_file = 0;
+foreach my $sid (keys %cur_alloc_table) {
+	my $rrd = $cur_alloc_table{$sid}{'RRD'};
+	my $ds = $cur_alloc_table{$sid}{'DS'}; 
+	$used_slots{$rrd}{$ds} = 1;
+	if ($rrd > $max_file) {
+		$max_file = $rrd;
+	}
+}
+
+my %free_slots = ();
+for (my $ii = 0; $ii <= $max_file; $ii++) {
+	for (my $jj = 0; $jj < 100; $jj++) {
+		if (!defined($used_slots{$ii}{$jj})) {
+			$free_slots{$ii}{$jj} = 1;
+		}
+	}
+}
+
+foreach my $sid (keys(%new_sidmap)) {
+	if (!defined($cur_sidmap{$sid})) {
+		$cur_alloc_table{$sid}{'MSG'} = $new_sidmap{$sid}{'MSG'};
+		(my $rrd, my $slots) = each %free_slots;
+		if (defined($slots)) {		
+			(my $ds, undef) = each %{$slots};
+			$cur_alloc_table{$sid}{'RRD'} = $rrd;
+			$cur_alloc_table{$sid}{'DS'} = $ds;
+			delete ${$slots}{$ds};
+			my $kk = keys %{$slots};
+			if ($kk == 0) {
+				delete $free_slots{$rrd};
+			}
+			keys %free_slots; # to reset each
+		}
+
+		if (!(defined($cur_alloc_table{$sid}{'RRD'}) and defined($cur_alloc_table{$sid}{'DS'}))) {
+			$max_file++;
+			print "Allocating new RRD($max_file)\n";
+			$cur_alloc_table{$sid}{'RRD'} = $max_file;
+			$cur_alloc_table{$sid}{'DS'} = 0;
+			for (my $ii = 1; $ii < 100; $ii++) {
+				$free_slots{$max_file}{$ii} = 1;
+			}
+		}
+
+		print "Allocating SID($sid) to RRD($cur_alloc_table{$sid}{'RRD'}), DS($cur_alloc_table{$sid}{'DS'})\n";
+	}
+}
+
+open(DATA, ">$s4a_map.$$") || die "Open($s4a_map.$$) error: $!"; 
+while ((my $sid, my $val) = each %cur_alloc_table) {
+	print(DATA "$sid\t${$val}{'RRD'}\t${$val}{'DS'}\t${$val}{'MSG'}\n");
+}
+close(DATA) || die "Close($s4a_map.$$) error: $!";
+
+if ( -e $s4a_map) {
+	move("$s4a_map", "$s4a_map.old") || die "Rename($s4a_map, $s4a_map.old) error: $!";
+}
+
+move("$s4a_map.$$", "$s4a_map") || die "Rename($s4a_map.$$, $s4a_map) error: $!";
+
+my $now = time();
+
+if (defined($cur_tar) and (-e $cur_tar)) {
+	move("$cur_tar", "$sigdir/oldcurrent.tgz") || die "Rename($cur_tar, $sigdir/oldcurrent.tgz): $!";
+}
+
+copy("$new_tar", "$sigdir/$sigfile$now.tgz") || die "Copy($new_tar, $sigdir/$sigfile$now.tgz): $!";
+
+
+writeCursigdate("$sigdir/$sigverfile$verinfo", $now);
+
+
+

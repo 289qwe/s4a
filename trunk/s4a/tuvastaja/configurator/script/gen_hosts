@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+HOST=`cat $VAR_HOSTNAME`
+DOM=`cat $VAR_DOMAIN`
+IP=`cat $VAR_IP_ADDRESS`
+
+HOSTS=/etc/hosts
+
+cat <<EOF > $HOSTS
+# OpenBSD: hosts,v 1.11 2002/09/26 23:35:51 krw Exp $
+#
+# Host Database
+#
+# RFC 1918 specifies that these networks are "internal".
+# 10.0.0.0      10.255.255.255
+# 172.16.0.0    172.31.255.255
+# 192.168.0.0   192.168.255.255
+EOF
+echo -n "# generated: " >> $HOSTS
+echo `date` >> $HOSTS
+echo "::1     localhost.$DOM localhost" >> $HOSTS
+echo "127.0.0.1       localhost.$DOM localhost" >> $HOSTS
+echo "::1     $HOST.$DOM $HOST" >> $HOSTS
+echo "127.0.0.1       $HOST.$DOM $HOST" >> $HOSTS
+echo "$IP    $HOST.$DOM $HOST" >> $HOSTS

@@ -1,0 +1,25 @@
+#!/usr/bin/perl 
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+
+require "/var/www/sigsupporter/sighelper.pm";
+
+my $cursigfile;
+my $res = get_current(\$cursigfile);
+
+if ($res) {
+	if (defined($cursigfile)) {
+		print "$cursigfile\n";
+	}
+	else {
+		print "There is no current signature version\n";
+	}
+}
+else {
+	print "Error while trying to detect current!\n";
+}
+

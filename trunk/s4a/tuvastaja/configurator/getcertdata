@@ -1,0 +1,132 @@
+#! /usr/bin/perl -w
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+
+use Encode 'from_to';
+
+# Constants
+my $infile="/var/www/tuvastaja/data/cacerts/tuvastaja.crt";
+my $cn="cn";
+my $ou="ou";
+my $oo="o";
+my $ll="l";
+my $cstype = "primary";
+
+my $confdir="/var/www/tuvastaja/data/conf/";
+
+if ($#ARGV >= 0 && $ARGV[0] eq "secondary") {
+	$cstype = "secondary";
+	$infile="/var/www/tuvastaja/data/cacerts2/tuvastaja.crt";
+}
+
+my $certdata=read_file($infile);
+
+if ($cstype eq "primary") {
+	if (defined($certdata->{$cn})) {
+		printf("Name (CN) \"%s\"\n", $certdata->{$cn});
+		write_file($confdir."Shortname.var", $certdata->{$cn});
+	} else {
+		print("Unable to read Tuvastaja Shortname (CN) from certificate\n");
+	}
+
+	if (defined($certdata->{$ou})) {
+		printf("Tuvastaja Full Name (OU) \"%s\"\n", $certdata->{$ou});
+		write_file($confdir."Fullname.var", $certdata->{$ou});
+	} else {
+		print("Unable to read Tuvastaja Full Name (OU) from certificate\n");
+	}
+
+	if (defined($certdata->{$oo})) {
+		printf("Tuvastaja Organisation (O) \"%s\"\n", $certdata->{$oo});
+		write_file($confdir."Organisation.var", $certdata->{$oo});
+	} else {
+		print("Unable to read Tuvastaja Organisation (O) from certificate\n");
+	}
+
+	if (defined($certdata->{$ll})) {
+		printf("Keskserveri aadress (L) \"%s\"\n", $certdata->{$ll});
+		write_file($confdir."Centralserver.var", $certdata->{$ll});
+	} else {
+		print("Unable to read Central server address (L) from certificate\n");
+	}
+} else {
+	if (defined($certdata->{$ll})) {
+		printf("Keskserveri aadress (L) \"%s\"\n", $certdata->{$ll});
+		write_file($confdir."Second_central.var", $certdata->{$ll});
+	} else {
+		print("Unable to read Central server address (L) from certificate\n");
+	}
+}
+
+
+
+sub write_file {
+	my ($filename, $string) = @_;
+	if(!open(OUTFILE, ">$filename.new")) {
+		printf("Unable to open file %s: %s\n\n",
+			 "$filename.new", $!);
+		return;
+	}
+	# tore
+	print(OUTFILE "$string\n"); 
+
+	if(!close(OUTFILE)) {
+		printf("Unable to close temporary file:  %s\n\n", $!);
+		return;
+	}
+	if(!rename("$filename.new","$filename")) {
+		printf("Unable to rename temporary file:  %s\n\n", $!);
+		return;
+	}
+}
+
+sub read_file {
+    my ($filename) = @_;
+
+    return(parse_certificate(scalar(`/usr/sbin/openssl x509 -in $filename -noout -subject 2>/dev/null`)));
+}
+
+sub tapikud {
+	my ($text) = @_;
+
+	$text =~ s/\\x(\w{2})/chr(hex($1))/ge;
+	from_to($text, "utf-8", "iso-8859-1"); 
+	return $text;
+}
+
+sub parse_certificate {
+    my ($text) = @_;
+
+    my %result;
+
+    foreach my $line (split(/[\r\n]+/, $text)) {
+	# syb. rida on: subject= /C=EE/O=TestOrganisatsioon/OU=Mingi asutus/CN=demo2/L=s4akeskus-conf.cyber.ee
+	if ($line =~ /^subject=(.*$)/ ){
+		foreach my $part (split('/', $1)) {
+			if ($part =~ /^O=(.*)$/ ){
+			    $result{$oo} = tapikud($1);
+			}
+			if ($part =~ /^OU=(.*)$/ ){
+			    $result{$ou} = tapikud($1);
+			}
+			if ($part =~ /^CN=(.*)$/ ){
+			    $result{$cn} = $1;
+			}
+			if ($part =~ /^L=(.*)$/ ){
+			    $result{$ll} = $1;
+			}
+		}
+	}
+    }
+
+    if (scalar(keys(%result)) == 0) {
+	print("Unable parse openssl output\n");
+	exit(1);
+    }
+
+    return(\%result);
+}

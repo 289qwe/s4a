@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+# logger "ipaudit exit"
+
+BASEDIR=/var/www/tuvastaja/ipcounter
+
+. $BASEDIR/variables.sh
+
+if [ -f $TMPFILE ]
+then
+	awk '{print $1}'  $TMPFILE | sort | uniq | wc -l | tr -d ' ' > $COUNTFILE.$$
+	ln -f $COUNTFILE.$$ $COUNTFILE
+	rm -f $COUNTFILE.$$ 
+
+fi 
+
+# logger "ipaudit new call: $BASEDIR/newipcounter"
+
+$BASEDIR/newipcounter  >/dev/null 2>&1
+
+exit 0

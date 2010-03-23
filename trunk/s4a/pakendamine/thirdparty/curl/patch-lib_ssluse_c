@@ -1,0 +1,10 @@
+--- lib/ssluse.c.orig	2009-07-23 16:27:46.084818000 +0200
++++ lib/ssluse.c	2009-07-23 16:28:12.027254000 +0200
+@@ -639,6 +639,7 @@
+   /* Setup all the global SSL stuff */
+   if(!SSLeay_add_ssl_algorithms())
+     return 0;
++  OpenSSL_add_all_digests();
+ 
+   return 1;
+ }

@@ -1,0 +1,156 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+LOGGER="logger -s -t $0 -p  local3.warning "
+LOGGERINFO="logger -s -t $0 -p  local3.info "
+
+STATUSDIR="/var/www/tuvastaja/updater/status"
+LEVELFILE="/var/www/tuvastaja/data/snort-logs/siglevel"
+FLAGFILE="$STATUSDIR/get-newsignature"
+
+if [ ! -f "$FLAGFILE"  ]; then
+	# uusi signatuure pole, lahkume
+	exit 0
+fi
+
+CERTDIR="/var/www/tuvastaja/data/cacerts"
+VARDIR="/var/www/tuvastaja/data/conf"
+
+NEWVER=`cat "$FLAGFILE"`
+CCERVER=`cat "$VARDIR/Centralserver.var"`
+
+CACERT="$CERTDIR/cacert.crt"
+CERT="$CERTDIR/tuvastaja.crt"
+KEY="$CERTDIR/tuvastaja.key"
+
+TIMEOUT=45
+OUTFILE="/tmp/curltmp-$NEWVER-$$.tgz"
+CURLURL="https://$CCERVER/signatures/signatures-$NEWVER.tgz"
+CURLOPTS="-f -s -S -m $TIMEOUT --stderr -"
+
+# pid
+MYPID="$STATUSDIR/install_signature.pid"
+
+#remove the pid file cleanly on exit
+cleanup() {
+  if [ -f "$MYPID" ]; then
+	rm "$MYPID"
+  fi
+}
+
+
+# Am I already running?
+if [ -f "$MYPID" ]; then
+  #MYPID exists, check if previous process exists.
+  pid=`head -n 1 $MYPID`
+  # echo "GOT pid $pid"
+  procname=`ps -axp $pid -o command  | tail -1 | awk '{ print $2}'`
+  test1="`basename $procname`"
+  test2="`basename $0`"
+  #echo "$test1 ja $test2"
+  if [ "$test1" = "$test2" ]; then
+    $LOGGER "$procname running, pid $pid"
+    exit 0
+  fi
+fi
+
+#put this pid in the file
+echo "$$" > "$MYPID"
+
+# trap all the exit signals for cleanup
+trap "cleanup; exit" 0 2 3 15
+
+# ootame juhusliku aja, et mitte samal ajal teistega signatuuri tõmbama tormata
+# ühtlaselt 3 min peale laiali määritud
+sleep $(($RANDOM%180))
+
+
+# Fail kohale
+
+errstr=`/usr/local/bin/curl --cacert "$CACERT" --cert "$CERT" --key "$KEY" $CURLOPTS --output $OUTFILE $CURLURL`
+
+ret=$?
+
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Unable to download signature file: $errstr"
+	rm -f $OUTFILE
+	rm "$FLAGFILE"
+	exit $ret;
+fi
+
+errstr=`tar tzf $OUTFILE 2>&1`
+
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Signature file testing failed: $errstr"
+	rm -f $OUTFILE
+	rm "$FLAGFILE"
+	exit $ret;
+fi
+
+SNORTDIR="/var/www/tuvastaja/snort"
+SNORTDATA="/var/www/tuvastaja/data/snort"
+TMPOUTDIR="$SNORTDATA/sigtmp-$NEWVER-$$"
+SNORTRULEDIR="$SNORTDATA/sid"
+SNORTCONFDIR="$SNORTDATA/conf"
+
+if [ ! -d $TMPOUTDIR ]; then
+	mkdir $TMPOUTDIR
+	ret=$?
+	if [ "$ret" -ne "0" ]; then
+		$LOGGER "Unable to make temporary signature directory"
+		exit 1;
+	fi
+fi
+	
+
+errstr=`tar -C $TMPOUTDIR -xzf $OUTFILE 2>&1`
+ret=$?
+
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Signature file unpacking failed: $errstr"
+	rm -f $OUTFILE
+	rm "$FLAGFILE"
+	rm -rf $TMPOUTDIR
+	exit $ret;
+fi
+
+# Olemas!
+SNORTRESTART=0
+if [ -d "$TMPOUTDIR/sid" ]; then
+	if [ -d "$SNORTDATA/sid.old" ]; then
+		rm -rf "$SNORTDATA/sid.old"
+	fi
+	mv "$SNORTDATA/sid" "$SNORTDATA/sid.old"
+	cp -RP "$TMPOUTDIR/sid" "$SNORTDATA/sid"
+	SNORTRESTART=1
+fi
+
+if [ -d "$TMPOUTDIR/conf" ]; then
+	if [ -d "$SNORTDATA/conf.old" ]; then
+		rm -rf "$SNORTDATA/conf.old"
+	fi
+	cp -RP "$SNORTDATA/conf" "$SNORTDATA/conf.old"
+	cp  $TMPOUTDIR/conf/* "$SNORTDATA/conf"
+	SNORTRESTART=1
+fi
+
+if [ "$SNORTRESTART" -eq "1" ]; then
+	$LOGGERINFO "Signature version $NEWVER loaded!" 
+else
+	$LOGGER "No signatures found from archive $NEWVER"
+fi
+
+echo "$NEWVER" > "$LEVELFILE"
+
+sh $SNORTDIR/genrulesconf.sh > /dev/null 2>&1
+$SNORTDIR/start-stop-snort restart
+
+rm -f $OUTFILE
+rm "$FLAGFILE"
+rm -rf $TMPOUTDIR
+
+exit 0
+
+

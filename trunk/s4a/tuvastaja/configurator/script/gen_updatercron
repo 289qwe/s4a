@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+UPDATERPATH=/var/www/tuvastaja/updater
+STATUSPATH=$UPDATERPATH/status
+UPDATERPATCH=$UPDATERPATH/install_patch
+UPDATERSIG=$UPDATERPATH/install_sig
+CRONFILE=/tmp/crontab.updater
+
+# Create crontab
+crontab -l > $CRONFILE
+if ! grep -q -R "updater" $CRONFILE; then
+  echo "30 * * * * $UPDATERPATCH" >> $CRONFILE
+  echo "*/6 * * * * $UPDATERSIG" >> $CRONFILE
+  echo "0 2 * * * /var/www/tuvastaja/configurator/disk-cleanup.pl" >> $CRONFILE
+  crontab $CRONFILE
+fi
+rm -rf $CRONFILE

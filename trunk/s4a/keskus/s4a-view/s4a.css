@@ -1,0 +1,134 @@
+html {
+}
+
+body.s4a-wide {
+	margin: 0px;
+	padding: 2px;
+	border: 0px;
+	outline: 0px;
+	background: #DDDDDD;
+}
+
+body.s4a-normal {
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+	outline: 0px;
+}
+
+div {
+}
+
+div.s4a {
+	padding-left: 4px;
+	border: 1px solid black;
+}
+
+a img {
+	border: 0px;
+	border-left: 1px solid black;
+	border-top: 1px solid black;
+}
+
+input {
+	margin-top: 3px;
+	margin-right: 5px;
+}
+
+img.s4a {
+	border-left: 0px;
+	border-right: 0px;
+	border-top: 0px;
+	border-bottom: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+img.det {
+	height: 72px;
+	width: 288px; 
+}
+
+img.sigs {
+	height: 72px;
+	width: 1800px;
+}
+
+form {
+	display: inline;
+}
+
+#bounding {
+        width: 1800px;
+	padding: 0px;
+	margin: 0px;
+	border: 0px;
+}
+
+#header {
+        width: 100%;
+//        height: 2.5em;
+	outline: black solid 1px;
+	margin-bottom: 2px;
+	background: silver;
+}
+ 
+#insideheader {
+	padding-top: 4px;
+	padding-left: 8px;
+}
+     
+#main {
+        width: 100%;
+        height: auto;
+	line-height: 0px;
+}
+
+th.header {
+	padding-left: 4px;
+	padding-right: 4px;
+	text-align: left;
+	font-variant: small-caps;
+	font-size: small;
+}
+
+td.header {
+	padding-left: 4px;
+	padding-right: 4px;
+	text-align: left;
+	font-size: small;
+}
+
+
+th {
+	background-color: silver;
+	padding-left: 4px;
+	padding-right: 4px;
+	text-align: left;
+}
+
+td.centre {
+	text-align: center;
+}
+
+td.s4a-ok0 {
+	background-color: rgb(216, 252, 151);
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+td.s4a-ok1 {
+	background-color: rgb(151, 252, 155);
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+td.s4a-problem {
+	background-color: rgb(229, 134, 114);
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+table.s4a {
+	border: 1px solid black;
+}

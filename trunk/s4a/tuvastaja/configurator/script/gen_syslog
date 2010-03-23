@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+if [ ! -f $VAR_SYSLOGSERVER ]; then
+  echo "$NOSYSLOG" > $VAR_SYSLOGSERVER
+fi
+LOGSERVER=`cat $VAR_SYSLOGSERVER`
+SYSLOGFILE=/etc/syslog.conf
+
+cp $CONFROOT/static/syslog.conf $SYSLOGFILE
+
+if [ "$LOGSERVER" = "$NOSYSLOG" ]; then
+  exit 0
+elif [ -z "$LOGSERVER" ]; then
+  exit 0
+else
+  echo "*.info	@$LOGSERVER" >> $SYSLOGFILE
+fi

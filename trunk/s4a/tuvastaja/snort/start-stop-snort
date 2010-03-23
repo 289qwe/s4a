@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+BINARY=/usr/local/bin/snort
+
+SNORTROOT=/var/www/tuvastaja/snort
+CONF=$SNORTROOT/snort.conf
+
+LOGDIRROOT=/var/www/tuvastaja/data
+SNORTLOG=$LOGDIRROOT/snort-logs
+
+WATCHDOGRRD=$SNORTROOT/stats/dog.rrd
+
+INTERFACE=trunk0
+
+SN=`/usr/bin/basename $BINARY`
+
+case "$1" in
+	start)
+		if [ ! -d $SNORTLOG ]; then
+			mkdir $SNORTLOG
+			chown _snort.www $SNORTLOG
+		fi
+		$BINARY -D -y -x -c $CONF -u _snort -g www -t $SNORTLOG -l $SNORTLOG -i $INTERFACE --pid-path $SNORTLOG >$SNORTLOG/snort.out 2>&1
+	;;
+	stop)
+		pkill snort
+		sleep 2
+		$0 status > /dev/null  2>&1
+		if [ $? -ne 1 ]; then
+			pkill -9 snort
+		fi
+	;;
+	status)
+		FIND_PROC=`pgrep $SN`
+
+		if [ -z "${FIND_PROC}" ]; then
+			echo "No running snort!"
+			exit 1
+		else
+			echo "Snort running on pid $FIND_PROC"
+		fi
+	;;
+	restart)
+		$0 stop
+		$0 start
+	;;
+	watchdog)
+		NOW=`/bin/date '+%s'`
+		if [ ! -f "$WATCHDOGRRD" ]; then
+			/usr/local/bin/rrdtool create "$WATCHDOGRRD" -b $NOW -s 360 \
+				DS:ds0:GAUGE:720:U:U RRA:AVERAGE:0.5:1:80
+			sleep 2
+			# muidu ei saa uuendada!
+			NOW=`/bin/date '+%s'`
+		fi
+		FIND_PROC=`pgrep $SN`
+		if [ -z "${FIND_PROC}" ]; then
+			# mõttepaus, võibolla keegi parasjagu laeb
+			# signatuure
+			sleep 5
+			FIND_PROC=`pgrep $SN`
+			if [ -z "${FIND_PROC}" ]; then
+				# ei midagi maas. Kirja
+				/usr/local/bin/rrdtool update "$WATCHDOGRRD" "$NOW:0"
+				# ja uuesti käima
+				$0 start
+				exit 0
+			fi
+		fi
+		# Siin meil snort käis
+		/usr/local/bin/rrdtool update "$WATCHDOGRRD" "$NOW:100"
+	;;
+	*)
+		echo "Usage: $0 {start|stop|status|restart|watchdog}"
+		exit 1
+	;;
+esac
+
+exit 0
+

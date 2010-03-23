@@ -1,0 +1,41 @@
+
+# Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+
+export PKG_PATH=ftp://ftp.aso.ee/pub/OpenBSD/4.6/packages/i386
+pkg_add curl-7.19.5
+pkg_add gettext-0.17p0
+pkg_add libart-2.3.20p0
+pkg_add libghttp-1.0.9p2
+pkg_add libiconv-1.13
+pkg_add libidn-1.11
+pkg_add libnet-1.1.2.1p0
+pkg_add libxml-2.6.32p2
+pkg_add metaauto-0.9
+pkg_add nagios-plugins-1.4.13
+pkg_add nrpe-2.12p1
+pkg_add p5-Crypt-SSLeay-0.57p0
+pkg_add p5-HTML-Parser-3.60
+pkg_add p5-HTML-Tagset-3.20
+pkg_add p5-HTTP-GHTTP-1.07p1
+pkg_add p5-Proc-ProcessTable-0.45
+pkg_add p5-RPC-XML-0.59
+pkg_add p5-RRD-1.2.30
+pkg_add p5-URI-1.37
+pkg_add p5-WWW-Curl-20040519p2
+pkg_add p5-XML-Parser-2.36p1
+pkg_add p5-libwww-5.826
+pkg_add php5-core-5.2.10
+pkg_add php5-pdo_sqlite-5.2.10
+pkg_add php5-sqlite-5.2.10
+pkg_add php5-xmlrpc-5.2.10
+pkg_add png-1.2.35
+pkg_add rrdtool-1.2.30
+pkg_add sqlite-2.8.17p1
+pkg_add sqlite3-3.6.13p0
+echo "Done with installing packages"
+echo "Creating neccessary php5 symlinks..."
+ln -s /var/www/conf/modules.sample/php5.conf /var/www/conf/modules
+ln -fs /var/www/conf/php5.sample/pdo_sqlite.ini /var/www/conf/php5/pdo_sqlite.ini
+ln -fs /var/www/conf/php5.sample/sqlite.ini /var/www/conf/php5/sqlite.ini
+ln -fs /var/www/conf/php5.sample/xmlrpc.ini /var/www/conf/php5/xmlrpc.ini
+echo "Done."

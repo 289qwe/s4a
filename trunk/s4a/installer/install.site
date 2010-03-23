@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+
+
+# Install all the neccessary software
+
+PKG_PATH=/cd/`uname -r`/packages/`machine -a`
+export PKG_PATH
+
+LIST=`cat $PKG_PATH/index`
+
+cd $PKG_PATH
+if [ $? -ne 0 ]; then
+  echo "Changing directory to $PKG_PATH failed!"
+else
+  echo "Entering to $PKG_PATH for installing packages"
+fi
+
+ldconfig /usr/local/lib
+for i in $LIST; do
+  pkg_add -x $i
+done
+
+
+# Make neccessary operations after install, before first login 
+export TERM=xterm-color
+cat <<EOF >>/etc/rc.local
+if [ ! -f /root/.firstapache ]; then
+  cd /var/www/tuvastaja/configurator
+  sh postinstall.sh
+fi
+EOF
+
+# Executing configuration.
+cd /var/www/tuvastaja/configurator
+sh script/gen_staticconf
+sh preboot.sh

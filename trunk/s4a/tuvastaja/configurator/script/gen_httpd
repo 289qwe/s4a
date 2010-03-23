@@ -1,0 +1,105 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+HOST=`cat $VAR_HOSTNAME`
+DOM=`cat $VAR_DOMAIN`
+
+HTTPROOT=/var/www/conf
+HTTPS4A=$HTTPROOT/s4a
+HTTPCONF=$HTTPS4A/tuvastaja.conf
+HTTPINDEX=/var/www/htdocs
+make_dir $HTTPS4A
+make_dir $HTTPINDEX
+make_dir $HTTPROOT/php5
+
+# Setting up static httpd.conf
+if ! grep -q -R "s4a" $HTTPROOT/httpd.conf; then
+  cp $CONFROOT/static/httpd.conf $HTTPROOT/httpd.conf
+fi
+
+# Setting up static index.html
+if ! grep -q -R "s4a" $HTTPINDEX/index.html; then
+  cp $CONFROOT/static/index.html $HTTPINDEX/index.html
+fi
+
+# Install apache_chroot with nrpe
+if [ ! -e /var/www/bin/rrdtool ]; then
+  sh $CONFROOT/script/install_chroot
+fi
+
+# For php
+if [ ! -s $HTTPROOT/php.ini ]; then
+  cp /usr/local/share/examples/php5/php.ini-recommended $HTTPROOT/php.ini
+fi
+if [ ! -s $HTTPROOT/modules/php5.conf ]; then
+  cp /usr/local/share/examples/php5/php5.conf $HTTPROOT/modules/php5.conf
+fi
+if [ ! -s $HTTPROOT/php5/dba.ini ]; then
+  ln -fs $HTTPROOT/php5.sample/dba.ini $HTTPROOT/php5/dba.ini
+fi
+
+# Create tuvastaja.conf
+cat <<EOF > $HTTPCONF
+<IfDefine SSL>
+
+##
+## SSL Virtual Host Context
+##
+
+<VirtualHost _default_:443>
+
+#  General setup for the virtual host
+DocumentRoot /var/www/htdocs
+EOF
+
+echo "ServerName $HOST.$DOM" >> $HTTPCONF
+
+cat <<EOF >> $HTTPCONF
+ServerAdmin root@localhost
+ErrorLog logs/error_log
+TransferLog logs/access_log
+
+SSLEngine on
+
+#SSLCipherSuite ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP
+SSLCertificateFile    /var/www/tuvastaja/data/apache/ssl/server.crt
+SSLCertificateKeyFile /var/www/tuvastaja/data/apache/ssl/private/server.key
+#SSLOptions +FakeBasicAuth +ExportCertData +CompatEnvVars
+CustomLog logs/ssl_request_log \
+          "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
+</VirtualHost>
+
+</IfDefine>
+
+EOF
+
+if [ -f /etc/rc.conf.local ]; then
+  if ! grep -q -R "httpd_flags=\"-DSSL\"" /etc/rc.conf.local; then
+    echo "httpd_flags=\"-DSSL\"         # for normal use: \"\" (or \"-DSSL\" after reading ssl(8))" >> /etc/rc.conf.local
+  fi
+else
+  echo "httpd_flags=\"-DSSL\"         # for normal use: \"\" (or \"-DSSL\" after reading ssl(8))" > /etc/rc.conf.local
+fi
+
+# Set permissions
+make_dir /var/www/htdocs/s4a/sd/graphs
+chown www:www /var/www/htdocs/s4a/sd/graphs
+
+make_dir /var/www/htdocs/confbackup
+chown www:www /var/www/htdocs/confbackup
+
+# Create webserver auth keys and restart apache
+cd /var/www/tuvastaja/keygen
+sh keygen.sh $HOST.$DOM
+

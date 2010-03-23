@@ -1,0 +1,44 @@
+#!/usr/bin/perl 
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use warnings;
+use File::Copy;
+
+
+require "/var/www/sigsupporter/sighelper.pm";
+
+my $force = $ARGV[0];
+
+#TODO need eraldi .pm'i
+my $s4a_map = "/var/www/etc/s4a-map";
+my $sigdir = "/var/www/confserv/signatures";
+my $sigverfile = "current-";
+my $sigfile = "signatures-";
+my $verinfo = "4.6";
+
+
+if ((! -e "$s4a_map.old") || (! -e "$sigdir/oldcurrent.tgz")) {
+	die "There are no old files to revoke to";
+}
+
+if (!defined($force) or ($force ne "-f")) {
+	die "Usage: $0 -f";
+}
+
+my $curfile;
+get_current(\$curfile) || die "Cannot get current";
+if (defined($curfile)) {
+	unlink $curfile;
+}
+
+move("$s4a_map.old", "$s4a_map") || die "Rename($s4a_map.old, $s4a_map) error: $!";
+
+my $now = time();
+move("$sigdir/oldcurrent.tgz", "$sigdir/$sigfile$now.tgz") || die "Copy($sigdir/oldcurrent.tgz, $sigdir/$sigfile$now.tgz): $!";
+writeCursigdate("$sigdir/$sigverfile$verinfo", $now);
+
+
+

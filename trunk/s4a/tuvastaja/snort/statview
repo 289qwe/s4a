@@ -1,0 +1,402 @@
+#!/usr/bin/perl -w
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+#'s0.gdbm.web'	type 0		DST SRC SID -> alert count
+#'s1.gdbm.web'			SRC DST -> alert count
+#'s2.gdbm.web'	type 4		SID SRC -> alert count
+#'s3.gdbm.web'	type 4		SID DST -> alert count
+#'s4.gdbm.web'	type 1		SID -> alert count
+#'s5.gdbm.web'	type 2		SRC -> alert count
+#'s6.gdbm.web'	type 3		DST -> alert count
+#'s7.gdbm.web'			SID -> signature name	No need to display this table
+
+#'header.gdbm.web'		Metadata
+#   1. key : STARTTIME		Start of the log
+#   2. key : TOTAL		Total alerts seen so far
+#   3. key : SIG_COUNT		Total signatures seen so far
+#   4. key : ENDTIME		End of the log
+#   5. key : DST_COUNT		Total destination IP's
+#   6. key : NEW_LINES		How many lines were processed during last run
+#   7. key : SRC_COUNT		Total source IP's
+#   8. key : NEW_ALERTS		New alerts found during last run
+#   9. key : PROC_TIME		The time of last run
+
+use strict;
+use CGI;
+use feature "switch";
+use GDBM_File;
+
+my $query = CGI->new;
+
+my $treshold = $query->param('treshold') || 0;		# We only display data where there are more alerts than 'treshold'
+my $line_count = $query->param('count') || 0;		# We only display first 'count' lines. TOP 25 for example
+my $page_type = $query->param('type') || 0;		# Type of view
+if (!$query->param('submit')) {				# By default show only 25 lines
+	$line_count = 25;
+}
+
+my $weekly = $query->param('weekly');			# Not implemented yet
+
+my $sig = $query->param('sig');				# Filter by SID
+my $src = $query->param('src');				# Filter by Source IP
+my $dst = $query->param('dst');				# Filter by Destination IP
+
+(undef, undef, undef, my $mday, my $mon, my $year, undef, undef, undef) = localtime(time);
+my $dir_prefix = sprintf ("%4d%02d%02d", $year+1900,$mon+1,$mday);	# Name for the daily directory
+
+my $gdbm_root = '/tuvastaja/data/snort-reports/';
+my $gdbm_dir = $gdbm_root . $dir_prefix . '/';
+my $headerfile =  $gdbm_dir . 'header.gdbm.web';	# Metadata file
+my %header = ();
+
+if (! -d $gdbm_root) {
+	print_error();
+}
+else {
+	if (! -d $gdbm_dir) {
+		print_error();
+	}
+	else {
+		do_cgi();				# We only do CGI if infrastructure is present
+	}
+}
+
+sub do_cgi {
+	if (-e $headerfile) {
+		tie %header, 'GDBM_File', $headerfile, &GDBM_READER, 0;		# attach to gdbm-file
+		my $dbh = tied %header;
+		if ($dbh) {
+			if ($weekly) {
+				print_error();
+			}
+			else {
+				print_head();
+				print $query->start_div({-class=>'content'});	# HTML structure, classes and tags are important!
+				given($page_type) {				# Which type to which query
+					when (0) { generate_all_sig_src_dst(); }
+					when (1) { generate_all_sig(); }
+					when (2) { generate_all_src(); }
+					when (3) { generate_all_dst(); }
+					when (4) { generate_one_sig(); }
+					default { }
+				}
+				print $query->end_div;
+				print_summary();		# We print it here, but CSS arranges it on the screen
+				print_form();			# We print it here, but CSS arranges it on the screen 
+				print_footer();
+			}
+			undef $dbh;			# perl-specific un-attach
+			untie %header;
+		}
+		else {
+			print_error();
+		}
+	}
+	else {
+		print_error();
+	}
+}
+
+sub url_type {
+	# we remember the count and treshold
+	return $query->url . '?type=' . $_[0] . '&count=' . $line_count . '&treshold=' . $treshold . '&submit=ok';
+}
+
+sub print_form {
+
+	# NB! HTML structure and tags!
+
+	# if you do $query->blaah, then you get <blaah></blaah>
+	# if you do $query->start_blaah, then you get <blaah>
+	# if you do $query->end_blaah, then you get </blaah>
+	# for -blaah => 'blaah'  type of things check docs ;)
+
+	print $query->start_div({-id=>'navbeta'});
+	print $query->start_div({-class=>'box'});
+	print $query->h3('Filter');
+	print $query->start_form(-method => 'GET');
+	
+	print $query->start_label;
+	print $query->span('Top:');
+	print $query->textfield(-name => 'count', -value => '25', -id => 'id_count', -size => 4, -class => 'input-text');
+	print $query->end_label;
+
+	print $query->start_label;
+	print $query->span('L&auml;vend:');
+	print $query->textfield(-name => 'treshold', -value => '0', -id => 'id_treshold', -size => 4, -class => 'input-text');
+	print $query->end_label;
+
+	print $query->hidden(-name => 'type', -value => '0');
+
+	if ($page_type == 0) {			# Filter is only available to certain queries
+		print $query->start_label;
+		print $query->span('Signatuur:');
+		print $query->textfield(-name => 'sig', -value => '', -id => 'id_sig', -size => 15, -class => 'input-text');
+		print $query->end_label;
+
+		print $query->start_label;
+		print $query->span('L&auml;hteaadress:');
+		print $query->textfield(-name => 'src', -value => '', -id => 'id_src', -size => 15, -maxlength => 15, -class => 'input-text');
+		print $query->end_label;
+
+		print $query->start_label;
+		print $query->span('Sihtaadress:');
+		print $query->textfield(-name => 'dst', -value => '', -id => 'id_dst', -size => 15, -maxlength => 15, -class => 'input-text');
+		print $query->end_label;
+	} 
+	else {
+		print $query->hidden(-name => 'sig', -value => '');
+		print $query->hidden(-name => 'src', -value => '');
+		print $query->hidden(-name => 'dst', -value => '');
+	}
+
+	print $query->start_div(-class => 'spacer');
+	print $query->submit(-name => 'submit', -value => 'Rakenda');
+	print $query->end_form;
+	print $query->end_div;
+	print $query->end_div;
+}
+
+sub generate_one_sig {
+	if ($sig) {
+		tie my %s7, 'GDBM_File', $gdbm_dir . 's7.gdbm.web', &GDBM_READER, 0;
+		my $signame = $s7{$sig};
+		untie %s7;
+		generate_one_sig_src($signame);
+		generate_one_sig_dst($signame);
+	}
+}
+
+sub generate_one_sig_src {
+	my $signame = $_[0];
+	tie my %s2, 'GDBM_File', $gdbm_dir . 's2.gdbm.web', &GDBM_READER, 0;
+	print $query->start_table;
+	print $query->caption("L&auml;hteaadressid signatuurile: ", $signame);		# SRC's for a SIG
+	print $query->Tr($query->th(['Jrk.', 'hoiatuste arv', 'IP']));
+	my $ii = 0;
+	# Always sort in descending order according to alert-count
+	foreach my $k (sort { $s2{$b} <=> $s2{$a} } keys %s2) {
+		@_ = split ",",$k;
+		if ($_[0] eq $sig) {							# Filter by signature
+			$ii++;
+			if ($line_count && ($ii > $line_count)) {			# Only up to 'count' lines
+				last;
+			}
+			my $alerts = $s2{$k};
+			if ($alerts > $treshold) {					# Only if treshold allows
+				my $src_ip = $_[1];
+				my $src_url = url_type(0) . '&src=' . $src_ip;		# Build URL for src IP
+				my $href_src = $query->a({href => $src_url}, $src_ip);
+				print $query->Tr($query->td([$ii, $alerts, $href_src]));
+			}
+		}
+	}
+	untie %s2;
+	print $query->end_table;
+}
+
+sub generate_one_sig_dst {
+
+	# This sub mirrors 'generate_one_sig_src' sub
+
+	my $signame = $_[0];
+	tie my %s3, 'GDBM_File', $gdbm_dir . 's3.gdbm.web', &GDBM_READER, 0;
+	print $query->start_table;
+	print $query->caption("Sihtaadressid signatuurile: ", $signame);
+	print $query->Tr($query->th(['Jrk.', 'hoiatuste arv', 'IP']));
+	my $ii = 0;
+	foreach my $k (sort { $s3{$b} <=> $s3{$a} } keys %s3) {
+		@_ = split ",",$k;
+		if ($_[0] eq $sig) {
+			$ii++;
+			if ($line_count && ($ii > $line_count)) {
+				last;
+			}
+			my $alerts = $s3{$k};
+			if ($alerts > $treshold) {
+				my $dst_ip = $_[1];
+				my $dst_url = url_type(0) . '&dst=' . $dst_ip;
+				my $href_dst = $query->a({href => $dst_url}, $dst_ip);
+				print $query->Tr($query->td([$ii, $alerts, $href_dst]));
+			}
+		}
+	}
+	untie %s3;
+	print $query->end_table;
+}
+
+sub generate_all_sig {
+	tie my %s4, 'GDBM_File', $gdbm_dir . 's4.gdbm.web', &GDBM_READER, 0;
+	tie my %s7, 'GDBM_File', $gdbm_dir . 's7.gdbm.web', &GDBM_READER, 0;
+	print $query->h3("Hoiatusi p&otilde;hjustanud signatuurid");			# All SIG's
+	print $query->start_table;
+	print $query->Tr($query->th(['Jrk.', '%', 'hoiatuste arv', 'signatuur']));
+
+	my $ii = 0;
+	foreach my $k (sort { $s4{$b} <=> $s4{$a} } keys %s4) {
+		$ii++;
+		if ($line_count && ($ii > $line_count)) {				# First check 'count'
+			last;
+		}
+
+		my $alerts = $s4{$k};
+		if ($alerts > $treshold) {						# Then check 'treshold'
+			my $percent = sprintf("%.2f", $alerts/$header{'TOTAL'}*100);
+			my $sig_url = url_type(4) . '&sig=' . $k;
+			my $href_sig = $query->a({href => $sig_url}, $s7{$k});
+			print $query->Tr($query->td([$ii, $percent, $alerts, $href_sig]));
+		}
+
+	}
+	untie %s4;
+	untie %s7;
+	print $query->end_table;
+}
+
+sub generate_all_src {
+	tie my %s5, 'GDBM_File', $gdbm_dir . 's5.gdbm.web', &GDBM_READER, 0;
+	print $query->h3("Hoiatusi p&otilde;hjustanud l&auml;hteaadressid");
+	print $query->start_table;
+	print $query->Tr($query->th(['Jrk.', '%', 'hoiatuste arv', 'IP']));
+
+	my $ii = 0;
+	foreach my $k (sort { $s5{$b} <=> $s5{$a} } keys %s5) {
+		$ii++;
+		if ($line_count && ($ii > $line_count)) {
+			last;
+		}
+
+		my $alerts = $s5{$k};
+		if ($alerts > $treshold) {
+			my $percent = sprintf("%.2f", $alerts/$header{'TOTAL'}*100);
+			my $src_url = url_type(0) . '&src=' . $k;
+			my $href_src = $query->a({href => $src_url}, $k);
+			print $query->Tr($query->td([$ii, $percent, $alerts, $href_src]));
+		}
+
+	}
+	untie %s5;
+	print $query->end_table;
+}
+
+sub generate_all_dst {
+	tie my %s6, 'GDBM_File', $gdbm_dir . 's6.gdbm.web', &GDBM_READER, 0;
+	print $query->h3("Hoiatusi p&otilde;hjustanud sihtaadressid");
+	print $query->start_table;
+	print $query->Tr($query->th(['Jrk.', '%', 'hoiatuste arv', 'IP']));
+
+	my $ii = 0;
+	foreach my $k (sort { $s6{$b} <=> $s6{$a} } keys %s6) {
+		$ii++;
+		if ($line_count && ($ii > $line_count)) {
+			last;
+		}
+
+		my $alerts = $s6{$k};
+		if ($alerts > $treshold) {
+			my $percent = sprintf("%.2f", $alerts/$header{'TOTAL'}*100);
+			my $dst_url = url_type(0) . '&dst=' . $k;
+			my $href_dst = $query->a({href => $dst_url}, $k);
+			print $query->Tr($query->td([$ii, $percent, $alerts, $href_dst]));
+		}
+
+	}
+	untie %s6;
+	print $query->end_table;
+}
+
+sub generate_all_sig_src_dst {
+
+	# This is the most difficult view - everything can be filtered
+
+	tie my %s0, 'GDBM_File', $gdbm_dir . 's0.gdbm.web', &GDBM_READER, 0;
+	tie my %s7, 'GDBM_File', $gdbm_dir . 's7.gdbm.web', &GDBM_READER, 0;
+	print $query->h3("&Uuml;levaade hoiatustest");
+	print $query->start_table;
+	print $query->Tr($query->th(['Jrk.', 'signatuur', 'l&auml;hteaadress', 'sihtaadress', 'hoiatuste arv']));
+	my $ii = 0;
+	foreach my $k (sort { $s0{$b} <=> $s0{$a} } keys %s0) {
+		@_ = split ",",$k;
+		my $src_ip = $_[1];
+		my $dst_ip = $_[0];
+		my $sid = $_[2];
+
+		if ($src && ($src ne $src_ip)) { 			# If filter src, then do filter
+			next;
+		}
+		if ($dst && ($dst ne $dst_ip)) {			# If filter dst, then do filter
+			next;
+		}
+		if ($sig && ($sig ne $sid)) {				# If filter sig, then do filter
+			next;
+		}
+
+		$ii++;
+		if ($line_count && ($ii > $line_count)) {		# 'count'
+			last;
+		}
+
+		my $alerts = $s0{$k};
+		if ($alerts > $treshold) {				# 'treshold'
+			my $src_url = url_type(0) . '&src=' . $src_ip;
+			my $href_src = $query->a({href => $src_url}, $src_ip);
+			my $dst_url = url_type(0) . '&dst=' . $dst_ip;
+			my $href_dst = $query->a({href => $dst_url}, $dst_ip);
+			my $sig_url = url_type(0) . '&sig=' . $sid;
+			my $href_sig = $query->a({href => $sig_url}, $s7{$sid});
+			print $query->Tr($query->td([$ii, $href_sig, $href_src, $href_dst, $alerts]));
+		}
+	}
+	untie %s0;
+	untie %s7;
+	print $query->end_table;
+}
+
+sub print_head {
+
+	# Include CSS.
+
+	print $query->header;
+	print $query->start_html(-title=>"Vaatleja", -style=>{-src=>'../s4a/sd/statview.css'});
+}
+
+sub print_summary {
+
+	print $query->start_div({-id=>'navalpha'});
+	print $query->start_dl;
+	if ($header{'TOTAL'}) {					# Some values only have meaning if 'TOTAL' > 0
+		print $query->dt('Logi algus:'), $query->dd($header{'STARTTIME'});
+		print $query->dt('Logi l&otilde;pp:'), $query->dd($header{'ENDTIME'});
+	}
+
+	print $query->dt('Viimane anal&uuml;&uuml;s:'), $query->dd($header{'PROC_TIME'});
+	print $query->dt('T&ouml;&ouml;deldud kirjeid:'), $query->dd($header{'NEW_LINES'});
+	print $query->dt('Uusi hoiatusi:'), $query->dd($header{'NEW_ALERTS'});
+
+	my $evt_url = $query->a({href => url_type(0)}, 'Hoiatusi:');
+	my $sig_url = $query->a({href => url_type(1)}, 'Signatuure:');
+	my $src_url = $query->a({href => url_type(2)}, 'L&auml;hteaadresse:');
+	my $dst_url = $query->a({href => url_type(3)}, 'Sihtaadresse:');
+
+	print $query->dt($evt_url), $query->dd($header{'TOTAL'});
+	print $query->dt($sig_url), $query->dd($header{'SIG_COUNT'});
+	print $query->dt($src_url), $query->dd($header{'SRC_COUNT'});
+	print $query->dt($dst_url), $query->dd($header{'DST_COUNT'});
+	print $query->end_dl;
+	print $query->end_div;
+}
+
+sub print_error {
+	print $query->header;
+	print $query->start_html("Vaatleja");
+	print $query->b("Statistikafaile ei ole veel loodud");
+	print $query->end_html;
+}
+
+# print the footer (needed for html)
+sub print_footer {
+	print $query->end_html;
+}
+

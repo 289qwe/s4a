@@ -1,0 +1,17 @@
+To completely deinstall the package you need to
+remove the following files by performing the
+following steps as root:
+
+ rm -f ${PREFIX}/conf/httpd.conf
+ rm -rf ${PREFIX}/conf/s4a
+ rm -rf ${PREFIX}/conf/keygen
+ rm -f ${PREFIX}/conf/haldusdigest
+ rm -f ${PREFIX}/bin/s4ad
+ rm -f ${PREFIX}/bin/rrdtool
+ rm -f ${PREFIX}/bin/sh
+ rm -rf ${PREFIX}/etc
+ rm -rf ${PREFIX}/usr
+
+Also clean root-user crontab, /etc/newsyslog.conf
+and /etc/syslog.conf files from s4a properties.
+

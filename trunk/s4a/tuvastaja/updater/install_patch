@@ -1,0 +1,268 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+LOGGER="logger -s -t $0 -p  local3.warning "
+LOGGERINFO="logger -s -t $0 -p  local3.info "
+
+STATUSDIR="/var/www/tuvastaja/updater/status"
+FLAGFILE="$STATUSDIR/get-newpatch"
+
+if [ ! -f "$FLAGFILE" ]; then
+  # paika pole, lahkume
+  exit 0
+fi
+
+CERTDIR="/var/www/tuvastaja/data/cacerts"
+VARDIR="/var/www/tuvastaja/data/conf"
+NEWVER=`cat "$FLAGFILE"`
+PATCHLEVELFILE="$STATUSDIR/patchlevel"
+
+if [ ! -f "$PATCHLEVELFILE" ]; then
+  # paigataset miskipärast pole, lahkume
+  rm -f "$FLAGFILE"
+  exit 0
+fi
+
+PATCHLEVEL=`cat "$PATCHLEVELFILE"`
+CCERVER=`cat "$VARDIR/Centralserver.var"`
+BASEVER=`uname -r`
+
+CACERT="$CERTDIR/cacert.crt"
+CERT="$CERTDIR/tuvastaja.crt"
+KEY="$CERTDIR/tuvastaja.key"
+
+TIMEOUT=1800
+PATCHFILE="/tmp/curltmp-patch$NEWVER-$$.tgz"
+CURLURL="https://$CCERVER/patches/patch-$BASEVER.$NEWVER.tgz"
+CURLOPTS="-f -s -S -m $TIMEOUT --stderr -"
+
+# pid
+# figure out where to put the pid file
+MYPID="$STATUSDIR/install_patch.pid"
+
+if [ `expr "$NEWVER" - "$PATCHLEVEL"` -ne "1" ]; then
+  # vale paik, lahkume
+  rm -f "$FLAGFILE"
+  exit 0
+fi
+
+# remove the pid file cleanly on exit
+cleanup() {
+  if [ -f "$MYPID" ]; then
+	rm "$MYPID"
+  fi
+}
+
+# Am I already running?
+if [ -f "$MYPID" ]; then
+  #MYPID exists, check if previous process exists.
+  pid=`head -n 1 $MYPID`
+  # echo "GOT pid $pid"
+  procname=`ps -axp $pid -o command  | tail -1 | awk '{ print $2}'`
+  test1="`basename $procname`"
+  test2="`basename $0`"
+  #echo "$test1 ja $test2"
+  if [ "$test1" = "$test2" ]; then
+    $LOGGER "$procname running, pid $pid"
+    exit 0
+  fi
+fi
+
+# put this pid in the file
+echo "$$" > "$MYPID"
+
+# trap all the exit signals for cleanup
+trap "cleanup; exit" 0 2 3 15
+
+# ootame juhusliku aja, et mitte samal ajal teistega paika tõmbama tormata
+# ühtlaselt 5 min peale laiali määritud
+sleep $(($RANDOM%300))
+
+# Fail kohale
+
+errstr=`/usr/local/bin/curl --cacert "$CACERT" --cert "$CERT" --key "$KEY" $CURLOPTS --output $PATCHFILE $CURLURL`
+
+ret=$?
+
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Unable to download patch file: $errstr"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	exit $ret;
+fi
+
+# signatuuri kontroll
+PATCHDIR=`mktemp -d /tmp/patchdir.XXXXXXXXXX`
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Unable to create temporary directory for patch"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	exit $ret
+fi
+
+if ! cd $PATCHDIR ; then
+	$LOGGER "Unable to change to patch directory"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	rm -rf "$PATCHDIR"
+	exit 1
+fi
+
+# oleme ajutises paiga kataloogis
+tar ztf "$PATCHFILE" >/dev/null
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Bad tar file from patch"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+tar zxf "$PATCHFILE" >/dev/null
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Problem unpacking patch"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+if [ ! -f s4apatch.tar ]; then
+	$LOGGER "Invalid patch contents - missing file"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit 1
+fi
+
+# nüüd on meil siin kataloogis s4apatch.tar
+mkdir patchtmp
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Problem creating temporary directory"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+cd patchtmp
+tar xf ../s4apatch.tar >/dev/null
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Problem unpacking patch contents"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+for FILE in spatch.level spatch.lst spatch.tar; do
+	if [ ! -f ${FILE} ]; then
+		$LOGGER "Invalid patch contents - missing file $FILE"
+		rm -f $PATCHFILE
+		rm "$FLAGFILE"
+		cd /
+		rm -rf "$PATCHDIR"
+		exit $ret
+	fi
+done
+
+# kontrollime versiooni
+PATCHVER=`cat spatch.level`
+if [ "$PATCHVER" != "$BASEVER.$NEWVER" ]; then
+        $LOGGER "Patch is of wrong version $PATCHVER but $BASEVER.$NEWVER is needed"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+# testime tari
+tar tf "$PATCHDIR/patchtmp/spatch.tar" >/dev/null
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Problem with patch - invalid tarball inside"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+# pakime lahti
+echo New patch contents:
+cd "$PATCHDIR/patchtmp"
+tar xvf "$PATCHDIR/patchtmp/spatch.tar"
+ret=$?
+if [ "$ret" -ne "0" ]; then
+	$LOGGER "Problem unpacking patch contents (disk full or readonly?) System may be in inconsistent state!"
+	rm -f $PATCHFILE
+	rm "$FLAGFILE"
+	cd /
+	rm -rf "$PATCHDIR"
+	exit $ret
+fi
+
+# paigaldame paki
+PACKAGES=`cat $PATCHDIR/patchtmp/spatch.lst`
+for PACKAGE in "$PACKAGES"; do
+	pkg_info -C "$PATCHDIR/patchtmp/$PACKAGE" >/tmp/pkginfo 2>&1
+	# kontrollime kas on signeeritud pakk
+	if grep -R "Certificate info:" /tmp/pkginfo; then
+		# testime installimist
+		pkg_add -nrqq -F update "$PATCHDIR/patchtmp/$PACKAGE" >/tmp/pkgadd 2>&1
+	        ret=$?
+		# kui korras, siis installime
+		if [ "$ret" -eq "0" ]; then
+			pkg_add -rqq -F update "$PATCHDIR/patchtmp/$PACKAGE"
+		else 
+			$LOGGER "Problem installing patch (pkg_add error). System may be in inconsistent state!"
+			$LOGGER "`cat /tmp/pkgadd`"
+			retadd=1
+		fi
+	else
+		$LOGGER "Package named $PACKAGE has not been digitally signed. Refusing to install it!"
+		retcert=1
+	fi
+done
+
+rm -f $PATCHFILE
+rm "$FLAGFILE"
+cd /
+rm -rf "$PATCHDIR"
+rm -f /tmp/pkginfo
+rm -f /tmp/pkgadd
+
+# Kui mõnel pakil certi pole või pakk ei installu, siis väljume siin.
+if [ "$retadd" -eq "1" ]; then
+	exit $retadd
+fi
+if [ "$retcert" -eq "1" ]; then
+	exit $retcert
+fi
+
+# kerime versiooni edasi
+echo "$BASEVER.$NEWVER" > "$VARDIR/Software_Version.var"
+echo "$NEWVER" > "$STATUSDIR/patchlevel"
+
+$LOGGERINFO Installed patch $BASEVER.$NEWVER successfully.
+
+rm -f "$FLAGFILE"
+
+rm -f $PATCHFILE
+rm -rf "$PATCHDIR"
+
+exit 0
+

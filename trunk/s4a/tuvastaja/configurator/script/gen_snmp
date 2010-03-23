@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+if [ ! -f $VAR_SNMP_SERVER ]; then
+  echo "127.0.0.1" > $VAR_SNMP_SERVER
+fi
+SNMP=`cat $VAR_SNMP_SERVER`
+
+if [ ! -f $VAR_RO_COMMUNITY ]; then
+  echo "$NOSYSLOG" > $VAR_RO_COMMUNITY
+fi
+COMMUNITY=`cat $VAR_RO_COMMUNITY`
+
+SNMPROOT=/etc/snmp
+SNMPCFG=$SNMPROOT/snmpd.local.conf
+make_dir $SNMPROOT
+
+# Setting up static snmpd.conf
+cp $CONFROOT/static/snmpd.conf $SNMPROOT/snmpd.conf
+
+if [ "$COMMUNITY" = "$NOSYSLOG" ]; then
+  rm -f $SNMPCFG
+elif [ -z "$COMMUNITY" ]; then
+  rm -f $SNMPCFG
+else
+  echo "rocommunity "$COMMUNITY" $SNMP" > $SNMPCFG
+fi
+
+if ! grep -q -R "snmpd" /etc/rc.local; then
+  echo "if [ -x /usr/local/sbin/snmpd ]; then" >> /etc/rc.local
+  echo "        echo -n ' snmpd';       /usr/local/sbin/snmpd" >> /etc/rc.local
+  echo "fi" >> /etc/rc.local
+fi
+
