@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+MRTGPATH=/var/www/tuvastaja/mrtg
+MRTGCONF=$MRTGPATH/mrtg.cfg
+MRTGLOG=$MRTGPATH/mrtg.log
+MRTGRRDPATH=/var/www/tuvastaja/data/rrd
+
+CRONFILE=/tmp/crontab.mrtg
+CRONTASK="*/5 * * * *  /usr/local/bin/mrtg --user _mrtg --group www $MRTGCONF --logging $MRTGLOG >/dev/null 2>&1"
+
+SYSLOG=/etc/newsyslog.conf
+SYSMRTG="$MRTGLOG _mrtg:www 644 3 1024 * \"\""
+
+create_daemon_user _mrtg 578
+user mod -G www _mrtg
+
+make_dir $MRTGPATH
+chown _mrtg:www $MRTGPATH
+
+make_dir $MRTGRRDPATH
+chown _mrtg:www $MRTGRRDPATH
+
+if [ ! -s $MRTGCONF ]; then
+  cp $CONFROOT/static/mrtg.cfg $MRTGCONF
+  chown _mrtg:www $MRTGCONF
+fi
+
+crontab -l > $CRONFILE
+if ! grep -q -R "mrtg.cfg" $CRONFILE; then 
+  echo "$CRONTASK" >> $CRONFILE
+  crontab $CRONFILE
+fi
+rm -rf $CRONFILE
+
+if ! grep -q -R "mrtg.log" $SYSLOG; then
+  echo "$SYSMRTG" >> $SYSLOG
+fi

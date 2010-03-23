@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# $Id: install_rrdtool.sh,v 1.6 2006/12/20 20:59:14 dijkstra Exp $
+#
+# Script to install rrdtool inside apache chroot
+
+PREFIX=${PREFIX:-/var/www}
+
+copy_binary ()
+{
+	THE_CMD="$1"
+
+	if [ ! -x ${THE_CMD} ]; then
+	    echo cannot find ${THE_CMD}  - exiting
+	    return 1
+	fi
+
+	FORMAT=`file ${THE_CMD} 2>/dev/null`
+	if [ "${FORMAT}x" = x ]; then
+	    echo cannot determine executable format for ${THE_CMD} - exiting
+	    return 1
+	fi
+
+	ELF=`echo ${FORMAT} | grep ELF`
+	if [ "${ELF}x" = x ]; then
+	    LIBS=`ldd "${THE_CMD}" | sed -e '1d' -e '$d' -e 's/^.* \([^ ]*\)$/\1/g'`
+	else
+	    LIBS=`ldd "${THE_CMD}" | sed -e '1,3d' -e '$d' -e 's/^.* \([^ ]*\)$/\1/g'`
+	fi
+	cd ${PREFIX}
+	cp -f ${THE_CMD} bin
+
+	if [ "${LIBS}x" = x ]; then
+	    echo cannot determine library dependencies for ${THE_CMD}
+
+	else
+		cp -f $LIBS usr/lib
+	fi
+
+	echo installed ${THE_CMD} to ${PREFIX}
+	return 0
+}
+
+cd ${PREFIX}
+mkdir -p bin usr/lib usr/libexec etc dev
+cp -f /usr/libexec/ld.so usr/libexec
+cp -f /bin/sh bin/sh
+cp -f /etc/protocols /etc/services etc
+
+# timezone
+if [ ! -e /var/www/etc/localtime ] 
+then
+	mkdir -p /var/www/usr/share/zoneinfo 
+	cp -R /usr/share/zoneinfo/* /var/www/usr/share/zoneinfo/
+	if [ ! -d /var/www/etc ]
+	then
+		mkdir /var/www/etc
+	fi
+	cd /var/www/etc 
+	ln -sf ../usr/share/zoneinfo/Europe/Tallinn localtime
+	echo zoneinfo installed to ${PREFIX}
+fi
+exit 1

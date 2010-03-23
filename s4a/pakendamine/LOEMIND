@@ -1,0 +1,48 @@
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+BSD pakettide tegemiseks peab olema välja tõmmatud ports.
+Selle saab näiteks: ftp://ftp.aso.ee/pub/OpenBSD/4.6/ports.tar.gz
+See tuleb bsd masinas /usr/ alla lahti pakkida.
+
+Hetkel on meie kolme paketi kategooriateks "cyber".
+See tähendab, et nende pakkettide asukoht portsu puus on:
+/usr/ports/cyber/paketinimi. Nimetame selle kataloogi paketi kataloogiks.
+
+1. Tee vastavad kataloogid, kui juba pole.
+Kopeeri selle kataloogi sisu BSD masina /usr/ports/cyber alla
+(ilma .svn kataloogideta).
+
+2. Enne uue paketi tegemist on soovitav puhastada paketi tegemise jaoks vajalik.
+Selleks anda paketi kataloogis järgnevad käsud:
+
+make clean
+make distclean
+make clean=plist
+make clean=package
+
+Kui ise ei viitsi seda teha, siis pakettide kataloogidega ühes kaustas on skript
+"puhastaja.sh" mis selle sinu eest ära teeb.
+kui kontrollsummat ei ole või arvatakse, et see on vale, siis tuleb ära kustutada
+paketikataloogist fail distinfo. See tehakse makesum targetiga uuesti
+
+3. Seejärel tõmmata uus lähtekood ning teha pakett.
+make fetch (sikutab lähtekoodi alla)
+make makesum (kui pahandatakse kontrollsumma puudumise üle)
+make fake (emuleerib installeerimist)
+make plist (tekitab paketti minevate failide nimekirja)
+
+Me paneme kaasa ka PLIST faili (õiguste ja käivitatavate skriptide jaoks tuleb seda
+käsitsi muuta). Juhul kui mõni fail vahepeal juurde tekib või ära kaob tuleb
+"make plist" tegevuse järel hoolikalt üle vaadata PLIST fail. Kas seal on vajalikud
+kataloogid ja failid ning kas õigused ja skriptid on säilinud.
+Vajadusel korrigeerida käsitsi PLIST fail õigeks. 
+make plist üritab mergeda muudatused sisse ja kui satub konflikti teeb faili PLIST.orig.
+
+Kui kõik eelenv on kenasti tehtud, siis:
+make package (tekitab paketi)
+
+* Enne uue versiooni paketi tegemist, on soovitatav vana versiooniga 
+asjassepuutuvad failid ja kataloogid kustutada punkti 2 järgi.
+Seejärel muuta paketi kataloogis asuvas Makefile's ära tarkvara
+paketi versiooninumber ning toimetada edasi juba punkti 3 järgi.

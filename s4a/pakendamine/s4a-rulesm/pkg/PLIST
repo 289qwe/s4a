@@ -1,0 +1,9 @@
+@comment $OpenBSD$
+bin/addsid.pl
+bin/dumbpig
+libdata/perl5/site_perl/Parse/
+libdata/perl5/site_perl/Parse/Snort.pm
+@man man/cat8/s4a-rulesm.0
+s4a-rulesm/
+s4a-rulesm/s4a.sample/
+s4a-rulesm/s4a.sample/oinkmaster.conf

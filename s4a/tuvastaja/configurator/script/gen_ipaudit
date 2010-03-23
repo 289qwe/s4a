@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+# Must be here - ipaudit uses it
+if [ ! -s $VAR_LOCALNETS ]; then
+  exit 0
+fi
+
+IPAUDITPATH="/var/www/tuvastaja/ipcounter"
+IPAUDITSCRIPT="$IPAUDITPATH/sendsignal"
+CRONFILE=/tmp/crontab.ipaudit
+
+# Create folder
+make_dir $IPAUDITPATH/tmp
+
+# Create crontab
+crontab -l > $CRONFILE
+if ! grep -q -R "ipcounter" $CRONFILE; then
+  echo "4,9,14,19,24,29,34,39,44,49,54,59 * * * * $IPAUDITSCRIPT" >> $CRONFILE
+  crontab $CRONFILE
+fi
+rm -rf $CRONFILE

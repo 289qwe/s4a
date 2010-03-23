@@ -1,0 +1,142 @@
+#!/usr/bin/perl -w
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+use strict;
+use MIME::QuotedPrint ();
+use Net::SMTP;
+use Sys::Hostname;
+use GDBM_File;
+
+my $host = hostname;
+(undef, undef, undef, my $mday, my $mon, my $year, undef, undef, undef) = localtime(time);
+
+my $gdbm_root = '/var/www/tuvastaja/data/snort-reports/';
+my $year_dir_prefix = sprintf("%4d", $year + 1900);
+my $day_dir_prefix = sprintf ("%02d%02d", $mon + 1, $mday);
+my $web_root = $gdbm_root . '/web';
+my $web_year_dir = $web_root . '/' . $year_dir_prefix;
+my $web_day_dir = $web_year_dir . '/' . $day_dir_prefix;
+
+my $headerfile =  $web_day_dir . '/header.gdbm.web';
+
+my $maxlines = 50;
+
+my %header = ();
+
+my $smtp = Net::SMTP->new('localhost');
+$smtp->mail('root@localhost');
+$smtp->to('root');
+$smtp->data();
+$smtp->datasend("MIME-Version: 1.0\n");
+$smtp->datasend("Content-Type: text/plain; charset=utf-8\n");
+$smtp->datasend("Content-Transfer-Encoding: quoted-printable\n"); 
+$smtp->datasend("To: root\n");
+$smtp->datasend("Subject: Tuvastaja $host turvarikete statistika\n");
+$smtp->datasend("\n");
+
+if (-e $headerfile) {
+	tie %header, 'GDBM_File', $headerfile, &GDBM_READER, 0;
+	print_summary();
+	generate_all_sig_src_dst();
+	untie %header; 
+}
+else {
+	send_smtp("Logi ei leitud");
+}
+
+$smtp->dataend();
+$smtp->quit;
+
+
+sub send_smtp {
+	$smtp->datasend(MIME::QuotedPrint::encode_qp("$_[0]\n"));
+}
+
+sub print_summary {
+
+	if ($header{'TOTAL'}) {
+		send_smtp("Logi algus:\t$header{'STARTTIME'}");
+		send_smtp("Logi lõpp:\t$header{'ENDTIME'}");
+	}
+
+	send_smtp("Hoiatusi:\t\t$header{'TOTAL'}");
+	send_smtp("Signatuure\t$header{'SIG_COUNT'}");
+	send_smtp("Lähteaadresse\t$header{'SRC_COUNT'}");
+	send_smtp("Sihtaadresse\t$header{'DST_COUNT'}");
+	send_smtp("");
+	send_smtp("TOP $maxlines");
+	send_smtp("");
+}
+
+sub generate_all_sig_src_dst {
+	tie my %s0, 'GDBM_File', $web_day_dir . '/s0.gdbm.web', &GDBM_READER, 0;
+	tie my %s7, 'GDBM_File', $web_day_dir . '/s7.gdbm.web', &GDBM_READER, 0;
+	send_smtp("============================================================================");
+	send_smtp("jrk.\thoiatusi\t%\tlähteaadress\tsihtaadress\tsignatuur");
+	send_smtp("============================================================================");
+	my $ii = 0;
+	my $total = 1;
+	if ($header{'TOTAL'}) {
+		$total = $header{'TOTAL'};
+	}
+
+	my %output = ();
+	my $count = 0;
+	my $treshold = 0;
+
+	# gather maxlines lines with highest values
+	while ((my $key, my $val) = each %s0) {
+		if ($treshold == 0) {
+			$treshold = $val;
+		}
+		if ($count < $maxlines) {
+			$output{$key} = $val;
+			if ($val < $treshold) {
+				$treshold = $val;
+			}
+			$count++;
+		}
+		else {
+			if ($val > $treshold) {
+				$output{$key} = $val;
+				my $oldtreshold = $treshold;
+				my $newtreshold = 0;
+				while ((my $kk, my $vv) = each %output) {
+					if (($oldtreshold > 0) && ($vv == $oldtreshold)) {
+						$oldtreshold = 0;
+						delete $output{$kk};
+					}
+					else {
+						if ($newtreshold == 0) {
+							$newtreshold = $vv;
+						}
+						if ($vv < $newtreshold) {
+							$newtreshold = $vv;
+						}
+					}
+				}
+				$treshold = $newtreshold;	
+			}
+		}
+	}
+
+	# Sort gathered lines and send
+	foreach my $kk2 (sort { $output{$b} <=> $output{$a} } keys %output) {
+		@_ = split ",",$kk2;
+		my $src_ip = $_[1];
+		my $dst_ip = $_[0];
+		my $sid = $_[2];
+		$ii++;
+		my $alerts = $output{$kk2};
+		my $percent = ($alerts/$total)*100;
+		my $output = sprintf("%d.\t%d\t%.2f%s\t%s\t%s\t%s", $ii, $alerts, $percent, '%', $src_ip, $dst_ip, $s7{$sid});
+		send_smtp($output);
+	}
+
+	untie %s0;
+	untie %s7;
+	send_smtp("============================================================================");
+}
+

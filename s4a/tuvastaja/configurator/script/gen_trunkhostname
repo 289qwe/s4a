@@ -1,0 +1,32 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+TRUNKNET=`cat $VAR_TRUNKIFACES`
+TRUNKHOST=/etc/hostname.trunk0
+
+# Create hostname files
+for dev in $TRUNKNET; do
+  print "up\n!ifconfig \$if -inet6" > /etc/hostname.$dev
+  chmod 640 /etc/hostname.$dev
+done
+
+print "up\n!ifconfig \$if -inet6" > $TRUNKHOST
+LINE="trunkproto broadcast trunkport"
+SEPAR=" "
+for INT in $TRUNKNET; do
+  LINE="$LINE$SEPAR$INT"
+  SEPAR=" trunkport "
+done
+echo "$LINE" >> $TRUNKHOST
+chmod 640 $TRUNKHOST

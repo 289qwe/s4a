@@ -1,0 +1,195 @@
+
+/* central server admin interface styles */
+
+body
+{
+	margin: 0;
+	padding: 0;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12pt;
+	color: #206ba4;
+	background-color: #e7e4d3;
+}
+
+h1
+{
+	margin: 16px 0 6px 0;
+	padding: 0 8px 0 8px;
+	color: #54a4de;
+	border-bottom: 2px solid #ff9834;
+}
+
+h2
+{
+	margin: 16px 8px 0 8px;
+	padding: 4px 0 4px 0;
+	color: #54a4de;
+	/* border-bottom: 1px solid #54a4de; */
+}
+
+div.box
+{
+	margin: 0 8px 6px 8px;
+	padding: 4px 6px 4px 6px;
+	overflow: hidden;
+	border: 1px solid #54a4de;
+}
+
+ul.system
+{
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+ul.system li
+{
+	float: left;
+	clear: left;
+}
+
+ul.system div.label
+{
+	margin: 0;
+	float: left;
+	clear: left;
+	font-weight: bold;
+	width: 170px;
+}
+
+ul.system div.data
+{
+	float: left;
+}
+
+ul.snortlist
+{
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+div.status
+{
+	font-weight: bold;
+}
+
+div.status_ok
+{
+	font-weight: bold;
+	color: #7fc22f; /*bedf5d;*/
+}
+
+div.info
+{
+	border: 1px solid green;
+}
+
+.authenticated {
+	background-image:url(images/icons/lock_on.gif) !important;
+}
+
+.unknown {
+	background-image:url(images/icons/lock_off.gif) !important;
+}
+
+.iconOK {
+	background-image:url(images/icons/ok.png) !important;
+	background-position: 0 center;
+	background-repeat: no-repeat;
+	padding-left:18px;
+	height:16px;
+}
+
+.iconAlert {
+	background-image:url(images/icons/alert.png) !important;
+	background-position: 0 center;
+	background-repeat: no-repeat;
+	padding-left:18px;
+	height:16px;
+}
+
+.iconError {
+	background-image:url(images/icons/exclamation.gif) !important;
+	background-position: 0 center;
+	background-repeat: no-repeat;
+	padding-left:18px;
+	height:16px;
+}
+
+.iconInfo {
+	background-image:url(images/icons/information.png) !important;
+	background-position: 0 center;
+	background-repeat: no-repeat;
+	padding-left:18px;
+	height:16px;
+}
+
+.btnRefresh {
+	background-image:url(images/icons/refresh.gif) !important;
+}
+
+.btnCheckUpdate {
+	background-image:url(images/icons/update.gif) !important;
+}
+
+.btnBackup {
+	background-image:url(images/icons/backup.gif) !important;
+}
+
+.btnAdd {
+	background-image:url(images/icons/add.gif) !important;
+}
+
+.btnDel {
+	background-image:url(images/icons/delete.gif) !important;
+}
+
+.btnNewCert {
+	background-image:url(images/icons/cert.gif) !important;
+}
+
+.btnDelCert {
+	background-image:url(images/icons/delete.gif) !important;
+}
+
+.btnNewKeys {
+	background-image:url(images/icons/key.gif) !important;
+}
+
+.btnDelKeys {
+	background-image:url(images/icons/delete.gif) !important;
+}
+
+.btnPrev {
+	background-position-top: 1px !important;
+	background-image:url(images/icons/arrowleft.gif) !important;
+}
+
+.btnNext {
+	background-position-top: 1px !important;
+	background-image:url(images/icons/arrowright.gif) !important;
+}
+
+.calendar {
+	background-image:url(images/icons/calendar.gif) !important;
+}
+
+.tbl-list-head {
+	padding: 2px;
+	font-weight: bold; 
+	border: 1px solid rgb(237,237,237);
+	background-color: rgb(247,247,247);
+	background-image: url(images/grid3-hrow.gif) !important;
+}
+
+.tbl-list-row {
+	padding: 2px; 
+	border-bottom: 1px solid rgb(237,237,237);
+}
+
+.tbl-list-row-left {
+	padding: 2px;
+	padding-left: 16px; 
+	border-bottom: 1px solid rgb(237,237,237);
+}

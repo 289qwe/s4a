@@ -1,0 +1,162 @@
+body {
+	margin: 20px;
+	padding: 0px;
+	color: #15428b;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+}
+
+a {
+	color: #15428b;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+	text-decoration: underline;
+}
+
+dl.s4a {
+	margin: 0px;
+	padding: 0px;
+}
+
+dd.s4a {
+	display: block;
+	margin: 0px;
+	padding: 0px;
+	margin-left: 40px;
+}
+
+h3.s4a {
+	margin-top: 12px;
+	margin-bottom: 12px;
+	font: bold 12px arial, tahoma, helvetica, sans-serif;
+}
+
+th.s4a {
+	display: table-cell;
+	font-weight: bolder;
+	font-variant: small-caps;
+	border-bottom: 1px solid;
+	border-color:#8db2e3;
+	text-align: left;
+	padding: 4px;
+	padding-left: 2px;
+}
+
+td.s4a-jrk {
+	width: 4em;
+}
+
+td.s4a-alerts {
+	width: 8em;
+}
+
+td.s4a-ip {
+	width: 12em;
+}
+
+td.s4a {
+	padding: 2px;
+	padding-right: 4px;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+	border-bottom: 1px solid;
+	border-color:#8db2e3;
+}
+
+table.s4a-floating-table {
+	float: left;
+	margin-right: 20px;
+	border-collapse: collapse;
+	border: 1px solid;
+	border-color:#8db2e3;
+}
+
+table.s4a {
+	width: 100%;
+	border-collapse: collapse;
+	border: 1px solid;
+	border-color:#8db2e3;
+}
+
+caption.s4a {
+	display: table-caption;
+	text-align: center;
+}
+
+tr.s4a {
+}
+
+/* layout */
+
+.content {
+	position: relative; 
+	width: auto;
+	min-width: 500px;
+	margin: 0px 0px 0px 180px;
+	background-color: white;
+	padding: 0px;
+	z-index: 3; 	
+}
+
+#navalpha {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	border: 1px dashed black;
+ 	border-color:#8db2e3;
+	z-index: 2;
+	width: 160px;
+	padding: 0px;
+	margin: 0px;
+	margin-bottom: 20px;
+}
+
+div.s4a-box {
+	padding: 10px;
+}
+		
+/* form */
+
+form {
+	border: 0px; 
+	margin: 0px; 
+	padding: 0px;
+}
+
+div.box {
+	padding: 10px;
+	padding-top: 0px;
+	border-top: 1px dashed black;
+	border-color: #8db2e3;
+}
+
+.input-text {
+	float: right;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+	margin-bottom: 10px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+div.box label {
+	display: block;
+	margin-bottom: 10px;
+	clear: right;
+}
+
+div.box label span.left {
+	display: block;
+	float: left;
+	padding-right: 6px;
+	text-align: left;
+}
+
+div.box label span.right {
+	display: block;
+	float: right;
+	padding-right: 6px;
+	text-align: right;
+}
+
+div.box input.submit {
+	display: block;
+	clear: right;
+}
+

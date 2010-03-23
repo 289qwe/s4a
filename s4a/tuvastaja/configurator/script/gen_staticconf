@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+#Include functions
+. $CONFROOT/functions.sh
+
+STATIC=$CONFROOT/static
+DATA=/var/www/tuvastaja/data
+STATUS=/var/www/tuvastaja/updater/status
+
+# Create some empty folders
+make_dir $DATA/apache/ssl/private
+make_dir $DATA/conf
+make_dir $DATA/cacerts
+make_dir $DATA/cacerts2
+make_dir $DATA/updater-logs
+make_dir $DATA/snort
+make_dir /var/www/dev
+make_dir $STATUS
+chgrp www $DATA/updater-logs
+
+# For syslogd
+if [ ! -s $DATA/updater-logs/updater.log ]; then
+  touch $DATA/updater-logs/updater.log
+  chgrp www $DATA/updater-logs/updater.log
+fi
+
+if [ ! -s /etc/rc.conf.local ]; then
+  touch /etc/rc.conf.local
+fi
+if ! grep -q -R "syslogd_flags" /etc/rc.conf.local; then
+  echo "syslogd_flags=\"-a /var/www/dev/log\"" >> /etc/rc.conf.local
+fi
+if ! grep -q -R "inetd" /etc/rc.conf.local; then
+  echo "inetd=NO" >> /etc/rc.conf.local
+fi
+
+# Symlink for configurator
+if [ ! -e /usr/local/bin/menu.sh ]; then
+  ln -s $CONFROOT/menu.sh /usr/local/bin
+fi
+
+# Copying static files for configuration
+cp $STATIC/sshd_config /etc/ssh/sshd_config
+cp $STATIC/.profile /root/.profile
+chmod 700 /root
+cp $STATIC/newsyslog.conf /etc/newsyslog.conf
+
+# Place patchcert if exist
+if [ -s $DATA/cacerts/$PATCHNAME ]; then
+  cat $DATA/cacerts/$PATCHNAME >> /etc/ssl/pkgca.pem
+  cat $DATA/cacerts/$CANAME >> /etc/ssl/pkgca.pem
+fi

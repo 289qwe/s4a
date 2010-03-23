@@ -1,0 +1,7 @@
+To completely deinstall the package you need to
+remove the following files and directories by 
+performing the following steps as root:
+
+ rm -rf ${PREFIX}/s4a-ca
+
+Note that all certificates will be removed!

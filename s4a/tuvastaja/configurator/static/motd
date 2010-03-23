@@ -1,0 +1,18 @@
+
+
+Ava konfigureerimismenüü käsuga:
+
+	sudo menu.sh
+
+Käi läbi kõik peamenüü  ja  alammenüüde punktid ning määra neis kõik nõutavad 
+andmed. Muudatused kehtesta käsuga "Rakenda sätted". Kui kõik on tehtud, anna 
+menüüs käsk "Arhiveeri muutujad ja sulge konfigureerija".
+
+USB-seadme kasutamisel (võtmete  laadimisel,  konfiguratsiooni  varundamisel,
+taastamisel) kuvatakse ekraanile  kerneli  teateid.  Ekraani  värskendamiseks
+vajuta CTRL+L.
+
+Konsoolilt väljumiseks anna käsk:
+
+	exit
+

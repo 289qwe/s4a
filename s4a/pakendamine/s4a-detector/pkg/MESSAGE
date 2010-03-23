@@ -1,0 +1,11 @@
+To start using s4a intrusion detection system please create
+the following symlink:
+
+ln -sf ${PREFIX}/tuvastaja/configurator/menu.sh \
+	/usr/local/bin/menu.sh
+
+
+Start configuring detector for executing as a regular 
+user with sudo-permissions:
+
+	sudo menu.sh

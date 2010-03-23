@@ -1,0 +1,995 @@
+#!/usr/bin/perl -w
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+# snortomatic is a perl script to inspect alert.fast type logs
+# every now and then and record certain statistical information
+# from those logs.
+#
+# USAGE: snortomatic
+
+use strict;
+use utf8;
+use Time::ParseDate;
+use Storable;
+use FileHandle;
+use Fcntl qw(SEEK_SET SEEK_CUR SEEK_END);
+use Net::CIDR;
+use RRDs;
+use Sys::Syslog qw(:standard :macros);
+use RPC::XML;
+use RPC::XML::Parser;
+use WWW::Curl::Easy;
+use GDBM_File;
+use File::Copy;
+
+my $snorto_start = time;
+
+my $dir_tuvastaja = "/var/www/tuvastaja";
+my $dir_tuvastaja_data = $dir_tuvastaja . "/data";
+my $dir_updater = $dir_tuvastaja . "/updater";
+my $dir_status = $dir_updater . "/status";
+my $ipcountfile = $dir_tuvastaja . "/ipcounter/ipcounter.txt";
+my @cidrlist = ();
+my $gdbm_root = $dir_tuvastaja_data . "/snort-reports";
+my $waldofile = $gdbm_root . "/waldo";
+my $waldo = 0;
+my $rrd_dir = $gdbm_root . "/rrd";
+my $dir_snort_logs = $dir_tuvastaja_data . "/snort-logs";
+my $pidfile = $dir_snort_logs . "/snortomatic.pid";
+my $inputfile = $dir_snort_logs . "/alert.fast";
+my $begintime = Time::ParseDate::parsedate('now - 6 minutes');
+
+my $fn_header = 'header.gdbm';
+my $fn_s0 = 's0.gdbm';
+my $fn_s1 = 's1.gdbm';
+my $fn_s2 = 's2.gdbm';
+my $fn_s3 = 's3.gdbm';
+my $fn_s4 = 's4.gdbm';
+my $fn_s5 = 's5.gdbm';
+my $fn_s6 = 's6.gdbm';
+my $fn_s7 = 's7.gdbm';
+
+my $snortomax = 270;
+
+require $dir_tuvastaja . "/updater/Pidfile.pm";
+require $dir_tuvastaja . "/updater/sighelper.pm";
+
+(undef, my $min, my $hour, my $mday, my $mon, my $year, undef, undef, undef) = localtime(time);
+my $gdbm_outputdir = $gdbm_root . '/current';
+
+my $noweb_file = $gdbm_outputdir . '/noweb';
+
+my $pp = Proc::Pidfile->new(pidfile => $pidfile);
+
+my %header = ();
+$header{'TOTAL'} = 0;
+$header{'STARTTIME'} = "";
+$header{'ENDTIME'} = "";
+
+$header{'SIG_COUNT'} = 0;
+$header{'SRC_COUNT'} = 0;
+$header{'DST_COUNT'} = 0;
+
+$header{'INTIP'} = 0;
+$header{'EXTIP'} = 0;
+
+my %centralheader = ();
+$centralheader{'TOTAL'} = 0;
+$centralheader{'SIG_COUNT'} = 0;
+$centralheader{'INTIP'} = 0;
+$centralheader{'EXTIP'} = 0;
+$centralheader{'ACTIVEIP'} = 0;
+$centralheader{'BADRATIO'} = 0;
+
+my %s0 = ();
+my %s1 = ();
+my %s2 = ();
+my %s3 = ();
+my %s4 = ();
+my %s5 = ();
+my %s6 = ();
+my %s7 = ();
+
+my %rrdstats = ();
+my %globalstats = ();
+
+my $prevalert = {};
+my $alert = {};
+
+my $inputsize = 0;
+my $processedlines = 0;
+
+openlog('snortomatic', 'ndelay,pid', LOG_LOCAL3);
+syslog(LOG_DEBUG, "Started inspection");
+
+if (! -d $gdbm_root) {
+	syslog(LOG_WARNING, "Couldn't open directory $gdbm_root");
+}
+else {
+	if (! -d $gdbm_outputdir) {
+		syslog(LOG_DEBUG, "Making directory $gdbm_outputdir");
+		mkdir ($gdbm_outputdir);
+	}
+
+	if (! -e $inputfile) {
+		syslog(LOG_WARNING, "Couldn't find $inputfile");
+		send_rrd("nodata");
+		store_snorto_rrd();
+	}
+	else {
+		$inputsize = -s $inputfile;
+		load_cidr();
+
+		if (-e $waldofile) {
+			my $waldofromf = retrieve($waldofile);
+			$waldo = ${$waldofromf};
+			syslog(LOG_DEBUG, "Using waldo from $waldofile");
+		}
+
+		if ($waldo > $inputsize) {
+			processfile("$inputfile.0", $waldo);
+			$waldo = 0;
+		}
+
+		$waldo = processfile($inputfile, $waldo);
+	
+		syslog(LOG_DEBUG, "Storing waldo $waldo to $waldofile");
+		store \$waldo, $waldofile;
+
+		print_stats();
+	}
+}
+
+syslog(LOG_DEBUG, "Finished inspection");
+closelog();
+
+### sub's ###
+
+sub processfile {
+	my $fn = $_[0];
+	my $wl = $_[1];
+
+	syslog(LOG_DEBUG, "Processing $fn with waldo $wl");
+	my $fh0 = FileHandle->new;
+	if ($fh0->open("< $fn")) {
+		$fh0->seek($wl, SEEK_SET);
+		while (<$fh0>) {
+			chomp;
+			processline($_);
+		}
+		$wl = $fh0->tell();
+		$fh0->close;
+	}
+	else {
+		syslog(LOG_WARNING, "Couldn't open $fn for processing");
+	}
+	return $wl;
+}
+
+# process whatever comes in
+sub processline {
+	my $lastwassnort = 0;
+	$processedlines++;
+	my $inputline = $_[0];
+	$prevalert = $alert;
+	$alert = {};
+	if ($inputline =~ m/^(\d+)\/(\d+)\/(\d+)\-(\d+)\:(\d+)\:(\d+)\.(\d+)\s(.+)/ox) {
+		$alert->{MON} = $1;
+		$alert->{DAY} = $2;
+		$alert->{YEAR} = $3;
+		$alert->{HOUR} = $4; 
+		$alert->{MIN} = $5;
+		$alert->{SEC} = $6;
+		$alert->{HOST} = $7;  
+		$alert->{SIG} = $8;   
+		$alert->{SIG} =~ s/\s*\[([\d\:]+)\]\s*//;  # Get rid of [343:33:31]
+		$alert->{SID} = $1;
+		$alert->{SID} =~ s/\:\d+$//;
+		$alert->{SIG} =~ s/\[\*\*\]//og; # Get rid of [**] if fast alert
+		$alert->{SIG} =~ s/{.*}//x; # Get rid of {TCP} if fast alert
+		if ($alert->{SIG} =~ s/\s([\d\.]+)[\:]?([\d]*)\s[\-\>]+\s([\d\.]+)[\:]?([\d]*)\s*//x) {
+			$alert->{SADDR} = $1; 
+			$alert->{SPORT} = $2; 
+			$alert->{DADDR} = $3; 
+			$alert->{DPORT} = $4; 
+			if ($alert->{SIG} =~ s/\[Classification\:([^\[|^\]]*?)\]\s*(?:\[Priority\:\s(\d+)\])//x) {
+				$alert->{CLASS} = $1;  
+				$alert->{PRIORITY} = $2;
+			} 
+			elsif ($alert->{SIG} =~ s/(?:\[Priority\:\s(\d+)\])//x) {
+				$alert->{PRIORITY} = $1;
+			}
+			process_data($alert); 
+			$lastwassnort = 1; 
+		} 
+		else {
+			$lastwassnort = 0;
+			$alert = {}; 
+		}
+	}
+	elsif ($lastwassnort && $inputline =~ m/last message repeated (\d+) times/) {
+		my $repeats = $1;
+		while ($repeats) {
+			process_data($prevalert);
+			$repeats--;
+		}
+	} 
+	else {
+		$lastwassnort = 0;
+	}
+}
+
+sub load_cidr {
+	my $localnetsfile = $dir_tuvastaja_data . "/conf/Localnets.var";
+	my $fh0 = FileHandle->new;
+	if ($fh0->open("< $localnetsfile")) {
+		my $inline = $fh0->getline();
+		if ($inline) {
+			chomp($inline);
+			my @cidrs = split(/ /, $inline);
+			foreach my $kk (@cidrs) {
+				if ($kk =~ m/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/) {
+					@cidrlist = Net::CIDR::cidradd($kk, @cidrlist);	
+					syslog(LOG_DEBUG, "Loaded CIDR $kk");
+				}
+				else {
+					syslog(LOG_WARNING, "Garbage in $localnetsfile: $kk");
+				}
+			}
+		}
+		else {
+			syslog(LOG_WARNING, "Error reading $localnetsfile");
+		}
+		$fh0->close;
+	}
+	else {
+		syslog(LOG_WARNING, "Couldn't open $localnetsfile");
+	}
+}
+
+# Read connection count if available
+sub get_ipcount {
+	syslog(LOG_DEBUG, "Reading active IP-count from $ipcountfile");
+	my $ret = 0;
+	if (-e $ipcountfile) {
+		open(PARAM, $ipcountfile);
+		$ret = <PARAM>;
+		close(PARAM);
+	}
+	else {
+		syslog(LOG_WARNING, "Couldn't find $ipcountfile, using 0 as homenet IP-count");
+	}
+	return int($ret);
+}
+
+sub snorto_rrd_dangerous {
+	my $retval = 0;
+	my $rrd_name = $rrd_dir.'/debug.rrd';
+	if (-e $rrd_name) {
+		(my $start, my $step, my $names, my $data) = RRDs::fetch($rrd_name, "AVERAGE", "--start", "end - 30 minutes", "--end", "now");
+		if (RRDs::error) {
+			my $error = RRDs::error;
+			syslog(LOG_WARNING, "Couldnt read $rrd_name: $error");
+		}
+		else {
+			my $total = 0;
+			my $count = 0;
+			for my $line (@$data) {
+				for my $val (@$line) {
+					if (defined $val) {
+						$total += $val;
+						$count++;
+					}
+				}
+			}
+			if ($count > 0) {
+				my $average = $total/$count;
+				if ($average > $snortomax) {
+					syslog(LOG_WARNING, "Snortomatic average work rate is $average > $snortomax");
+					$retval = 1;
+				}
+			}
+			else {
+				syslog(LOG_DEBUG, "No valid data found from $rrd_name");
+			}
+		}
+	}
+	else {
+		syslog(LOG_DEBUG, "File not found: $rrd_name");
+	}
+	return $retval;
+}
+
+# print Tuvasta stats do files
+sub print_stats {
+	
+	$globalstats{'alerts'} = $header{'TOTAL'};
+	$globalstats{'sigs'} = keys %s4;
+	$globalstats{'srcip'} = keys %s5;
+	$globalstats{'dstip'} = keys %s6;
+	$globalstats{'intip'} = $header{'INTIP'};
+	$globalstats{'extip'} = $header{'EXTIP'};
+	$globalstats{'activeip'} = get_ipcount();
+	$centralheader{'ACTIVEIP'} = $globalstats{'activeip'};
+
+	$globalstats{'badratio'} = 0;
+	if ($globalstats{'activeip'} > 0) {
+		$globalstats{'badratio'} = ($globalstats{'intip'}/$globalstats{'activeip'}) * 100;
+	}
+
+	$centralheader{'BADRATIO'} = $globalstats{'badratio'};
+	$centralheader{'EXTIP'} = $globalstats{'extip'};
+
+	syslog(LOG_DEBUG, "(alerts, signatures, sources, destinations, internal ip's, external ip's, active ip's): 
+				($globalstats{'alerts'}, $globalstats{'sigs'}, $globalstats{'srcip'}, 
+				$globalstats{'dstip'}, $globalstats{'intip'}, $globalstats{'extip'}, $globalstats{'activeip'})");
+
+	my $weballowed = 1;
+	if (-e $noweb_file) {
+		$weballowed = 0;
+	}
+	else {
+		if (snorto_rrd_dangerous()) {
+			$weballowed = 0;
+			syslog(LOG_WARNING, "No more webcache for today!");
+			open(FILE, "> $noweb_file");
+			close(FILE);
+		}
+	}
+
+	store_perrule_rrd();
+	store_global_rrd();
+	rotate_gdbm();
+	if ($weballowed) {
+		store_gdbm();
+	}
+	else {
+		undef_gdbm();
+	}
+	send_rrd("data");
+	if ($weballowed) {
+		copy_gdbm_for_web();
+	}
+	store_snorto_rrd();
+}
+
+sub prepare_rrd_request {
+	
+	my $patchlevel = $_[0];
+	my $siglevel = $_[1];
+	my $send_type = $_[2];
+
+	my @perrule_metrics;
+	my $basever = read1frompipe("/usr/bin/uname -r");
+	my $snortstatus = 
+		system("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort > /dev/null");
+	my $mac = my_mac();
+
+	if ($send_type eq "data") {
+		foreach my $k (keys %rrdstats) {
+			if ($k =~ m/^1\:\d+$/) {
+				my $ratio = 0;
+				if ($centralheader{'ACTIVEIP'} > 0) {
+					$ratio = ($rrdstats{$k}{'intip'}/$centralheader{'ACTIVEIP'}) * 100;
+				}
+
+				my $metricselem = RPC::XML::struct->new({
+					'sid' => RPC::XML::string->new($k),
+					'alerts' => RPC::XML::int->new($rrdstats{$k}{'alerts'}),
+					'intip' => RPC::XML::double->new($ratio),
+					'extip' => RPC::XML::int->new($rrdstats{$k}{'extip'}),
+					'srcdst' => RPC::XML::int->new($rrdstats{$k}{'srcdst'})
+				});
+
+				push @perrule_metrics, $metricselem;
+			}
+		}
+
+		my $global_metrics = RPC::XML::struct->new({
+				'alerts' => RPC::XML::int->new($centralheader{'TOTAL'}),
+				'sigs' => RPC::XML::int->new($centralheader{'SIG_COUNT'}),
+				'badratio' => RPC::XML::double->new($centralheader{'BADRATIO'}),
+				'extip' => RPC::XML::int->new($centralheader{'EXTIP'})
+			});;
+
+		return RPC::XML::request->new( 
+			'tuvastaja.hello', 
+			RPC::XML::struct->new({
+				'patchlevel' => RPC::XML::int->new($patchlevel), 
+				'baseversion' => RPC::XML::string->new($basever), 
+				'ruleversion' => RPC::XML::int->new($siglevel),
+				'mymac' => RPC::XML::string->new($mac),
+				'monitoringinfo' => RPC::XML::struct->new({
+					'snortstatus' => RPC::XML::int->new($snortstatus),
+				}),
+				'currenttime' => RPC::XML::int->new(time()),
+				'perruledata' => RPC::XML::array->new(@perrule_metrics),
+				'globaldata' => $global_metrics
+			})); 
+	}
+	else {
+		return RPC::XML::request->new( 
+			'tuvastaja.hello', 
+			RPC::XML::struct->new({
+				'patchlevel' => RPC::XML::int->new($patchlevel), 
+				'baseversion' => RPC::XML::string->new($basever), 
+				'ruleversion' => RPC::XML::int->new($siglevel),
+				'mymac' => RPC::XML::string->new($mac),
+				'monitoringinfo' => RPC::XML::struct->new({
+					'snortstatus' => RPC::XML::int->new($snortstatus),
+				}),
+				'currenttime' => RPC::XML::int->new(time())
+			})); 
+	}
+
+}
+
+sub send_rrd {
+
+	my $send_type = $_[0];
+
+	my $errespfile = $dir_status."/updater-last-error";
+
+	syslog(LOG_DEBUG, "Sending RRDs");
+
+	if (!varexists("Centralserver.var")) {
+		syslog(LOG_INFO, "No configuration: certificate not loaded");
+		return;
+	}
+
+	if (!varexists("IFACE.var")) {
+		syslog(LOG_INFO, "No configuration: management interface not configured");
+		return;
+	}
+
+	my $patchlevel = readCursigdate("$dir_status/patchlevel");
+	my $siglevel = readCursigdate("$dir_snort_logs/siglevel");
+
+	my $tmpreq = prepare_rrd_request($patchlevel, $siglevel, $send_type);
+	my $ccname = readvar("Centralserver.var");
+	my $reqstr = $tmpreq->as_string();
+
+	syslog(LOG_DEBUG, "$reqstr");
+
+	my $respo = sendrequest("https://$ccname/xmlrpc.php", $reqstr, "/var/www/tuvastaja/data/cacerts");
+
+	if (!defined($respo->{'httpdata'})) {
+		syslog(LOG_WARNING, "Empty response from centralserver");
+		return;	#TODO
+	}
+
+	syslog(LOG_DEBUG, "$respo->{'httpdata'}");
+
+	my $respParser = RPC::XML::Parser->new()->parse($respo->{'httpdata'}); 
+
+	if (!ref($respParser)) {
+		syslog(LOG_WARNING, "Invalid XML-RPC response: $respParser");
+		return;	#TODO
+	}
+
+	if ($respParser  !~ /^RPC::XML::response/) {
+		syslog(LOG_WARNING, "Invalid XML-RPC response structure.");
+		return;	#TODO
+	}
+
+	my $respdata = $respParser->value;
+
+	if ($respParser->is_fault) {
+		# Olulised vead:
+		my $XMLRPC_ERR_INACTIVE = 3;
+		my $XMLRPC_ERR_AMBIGUOUS_MAC = 4;
+		my $errorname;
+
+		# kui on tuntud viga siis paneme veebi jaoks kirja
+		if ($$respdata{'faultCode'}->value == $XMLRPC_ERR_INACTIVE) {
+			$errorname = "XMLRPC_ERR_INACTIVE";
+	        } 
+		elsif ($$respdata{'faultCode'}->value == $XMLRPC_ERR_AMBIGUOUS_MAC) {
+			$errorname = "XMLRPC_ERR_AMBIGUOUS_MAC";
+		} 
+		else {
+			# siin ei tosta kisa, sisemised vead.
+			# logime ainult
+			syslog(LOG_WARNING, "Got fatal error ".$$respdata{'faultCode'}->value." from central server: ".$$respdata{'faultString'}->value);
+			return;
+		}
+		# oli mingi oluline viga: saadame kirju ja paneme keskserverile kirja
+		my $tmpstr = "Connection to central server refused: ".$$respdata{'faultString'}->value;
+		syslog(LOG_WARNING, $tmpstr);
+		print("$tmpstr\n"); 
+		writeCursigdate($errespfile, $errorname);
+		return;
+	}
+
+	# paneme kirja et uuendus Ãµnnestus
+	writeCursigdate("$dir_status/updater-last-run", time());
+	if (-f $errespfile) {
+		unlink($errespfile);
+	}
+
+	if (defined($$respdata{'ruleversion'})) {
+		if ($$respdata{'ruleversion'}->value > $siglevel) {
+			writeCursigdate("$dir_status/get-newsignature", $$respdata{'ruleversion'}->value);
+		}		
+	}
+
+	if (defined($$respdata{'softversion'})) {
+		if($$respdata{'softversion'}->value > $patchlevel) {
+			writeCursigdate("$dir_status/get-newpatch", $patchlevel + 1);
+		}
+	}
+
+	if (varexists("Second_central.var") && ($send_type eq "data")) {
+		my $scname = readvar("Second_central.var");
+		if ($scname) {
+			my $respo2 = sendrequest("https://$scname/xmlrpc.php", $reqstr, "/var/www/tuvastaja/data/cacerts2");
+		}
+	}
+} 
+
+sub store_snorto_rrd {
+
+	syslog(LOG_DEBUG, "Storing debug RRDs");
+	if (! -d $rrd_dir) {
+		syslog(LOG_DEBUG, "Creating RRD directory $rrd_dir");
+		mkdir ($rrd_dir);
+	}
+
+	my $snorto_end = time;
+	my $diff = $snorto_end - $snorto_start;
+
+	my $rrd_name = $rrd_dir.'/debug.rrd';
+	my $rrd_update = "N:$diff";
+	store_single_rrd($rrd_name, $rrd_update, "snorto");
+}
+
+
+sub store_global_rrd {
+
+	syslog(LOG_DEBUG, "Storing global RRDs");
+	if (! -d $rrd_dir) {
+		syslog(LOG_DEBUG, "Creating RRD directory $rrd_dir");
+		mkdir ($rrd_dir);
+	}
+
+	my $rrd_name = $rrd_dir.'/global.rrd';
+	my $rrd_update = "N:$globalstats{'alerts'}:$globalstats{'sigs'}:$globalstats{'intip'}:"
+				. "$globalstats{'extip'}:$globalstats{'activeip'}:$globalstats{'badratio'}";
+
+	store_single_rrd($rrd_name, $rrd_update, "global");
+}
+
+sub store_perrule_rrd {
+	syslog(LOG_DEBUG, "Storing RRDs");
+	if (! -d $rrd_dir) {
+		syslog(LOG_DEBUG, "Creating RRD directory $rrd_dir");
+		mkdir ($rrd_dir);
+	}
+
+	foreach my $k (keys %rrdstats) {
+		my $rrd_name = $rrd_dir.'/'.$k.'.rrd';
+		my $rrd_update = "N:$rrdstats{$k}{'alerts'}:$rrdstats{$k}{'intip'}:$rrdstats{$k}{'extip'}:$rrdstats{$k}{'srcdst'}";
+		store_single_rrd($rrd_name, $rrd_update, "perrule");
+	}
+
+	opendir(my $dh, $rrd_dir);
+	my @files = readdir($dh);
+	for my $k (@files) {
+		if ($k =~ m/^(\d+:\d+)\.rrd$/ox) {
+			if (! exists $rrdstats{$1}) {
+				my $rrd_name = $rrd_dir.'/'.$1.'.rrd';
+				my $rrd_update = "N:0:0:0:0";
+				store_single_rrd($rrd_name, $rrd_update, "perrule");
+			}
+		}
+	}
+	closedir($dh);
+}
+
+sub store_single_rrd {
+	my $rrd_name = $_[0];
+	my $rrd_update_str = $_[1];
+	my $rrd_type = $_[2];
+	my $error = 0;
+	if (! -e $rrd_name) {
+		syslog(LOG_DEBUG, "Creating new RRD $rrd_name");
+		if ($rrd_type eq "perrule") {	
+			RRDs::create($rrd_name, "--start", "now", 
+				"DS:alerts:GAUGE:600:U:U", 
+				"DS:intip:GAUGE:600:U:U", 
+				"DS:extip:GAUGE:600:U:U", 
+				"DS:srcdst:GAUGE:600:U:U", 
+				"RRA:AVERAGE:0.5:1:864", 
+				"RRA:AVERAGE:0.5:12:168", 
+				"RRA:AVERAGE:0.5:288:31",
+				"RRA:AVERAGE:0.5:2016:52");
+		}
+		elsif ($rrd_type eq "global") {
+			RRDs::create($rrd_name, "--start", "now", 
+				"DS:alerts:GAUGE:600:U:U", 
+				"DS:sigs:GAUGE:600:U:U", 
+				"DS:intip:GAUGE:600:U:U", 
+				"DS:extip:GAUGE:600:U:U", 
+				"DS:activeip:GAUGE:600:U:U", 
+				"DS:badratio:GAUGE:600:U:U", 
+				"RRA:AVERAGE:0.5:1:864", 
+				"RRA:AVERAGE:0.5:12:168", 
+				"RRA:AVERAGE:0.5:288:31",
+				"RRA:AVERAGE:0.5:2016:52");
+		}
+		elsif ($rrd_type eq "snorto") {
+			RRDs::create($rrd_name, "--start", "now", 
+				"DS:snorto:GAUGE:600:U:U", 
+				"RRA:AVERAGE:0.5:1:864", 
+				"RRA:AVERAGE:0.5:12:168", 
+				"RRA:AVERAGE:0.5:288:31",
+				"RRA:AVERAGE:0.5:2016:52");
+		}
+		else {
+			syslog(LOG_WARNING, "Sub store_single_rrd called with invalid parameters");
+		}
+		$error = RRDs::error;
+	}
+	if ($error) {
+		syslog(LOG_WARNING, "Unable to create RRD: $error");
+			
+	}
+	else {
+		RRDs::update($rrd_name, $rrd_update_str);
+		$error = RRDs::error;
+		if ($error) {
+			syslog(LOG_WARNING, "Unable to update RRD $rrd_name: $error");	
+		}
+	}
+}
+
+sub copy_gdbm_for_web {
+	syslog(LOG_DEBUG, "Storing cache for web");
+	my $year_dir_prefix = sprintf("%4d", $year + 1900);
+	my $day_dir_prefix = sprintf ("%02d%02d", $mon + 1, $mday);
+
+	my $web_root = $gdbm_root . '/web';
+	my $web_year_dir = $web_root . '/' . $year_dir_prefix;
+	my $web_day_dir = $web_year_dir . '/' . $day_dir_prefix;
+
+	if (! -d $web_root) {
+		syslog(LOG_DEBUG, "Making directory $web_root");
+		mkdir ($web_root);
+	}
+
+	if (! -d $web_year_dir) {
+		syslog(LOG_DEBUG, "Making directory $web_year_dir");
+		mkdir ($web_year_dir);
+	}
+
+	if (! -d $web_day_dir) {
+		syslog(LOG_DEBUG, "Making directory $web_day_dir");
+		mkdir ($web_day_dir);
+	}
+
+	copy("$gdbm_outputdir/$fn_s0", "$web_day_dir/$fn_s0.web");
+	copy("$gdbm_outputdir/$fn_s1", "$web_day_dir/$fn_s1.web");
+	copy("$gdbm_outputdir/$fn_s2", "$web_day_dir/$fn_s2.web");
+	copy("$gdbm_outputdir/$fn_s3", "$web_day_dir/$fn_s3.web");
+	copy("$gdbm_outputdir/$fn_s4", "$web_day_dir/$fn_s4.web");
+	copy("$gdbm_outputdir/$fn_s5", "$web_day_dir/$fn_s5.web");
+	copy("$gdbm_outputdir/$fn_s6", "$web_day_dir/$fn_s6.web");
+	copy("$gdbm_outputdir/$fn_s7", "$web_day_dir/$fn_s7.web");
+	copy("$gdbm_outputdir/$fn_header", "$web_day_dir/$fn_header.web");
+}
+
+sub test_time {
+	my $hh = $_[0];
+	my $mm = $_[1];
+	if ($hh == 0) {
+		for my $ii (0..4) {
+			if ($mm == $ii) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+sub rotate_gdbm {
+	if (test_time($hour, $min)) {
+		unlink("$gdbm_outputdir/$fn_s0");
+		unlink("$gdbm_outputdir/$fn_s1");
+		unlink("$gdbm_outputdir/$fn_s2");
+		unlink("$gdbm_outputdir/$fn_s3");
+		unlink("$gdbm_outputdir/$fn_s4");
+		unlink("$gdbm_outputdir/$fn_s5");
+		unlink("$gdbm_outputdir/$fn_s6");
+		unlink("$gdbm_outputdir/$fn_s7");
+		unlink("$gdbm_outputdir/$fn_header");
+		unlink($noweb_file);
+	}
+}
+
+sub undef_gdbm {
+	# TODO - needed for the case where webcache is not stored 
+	undef %s0;
+	undef %s1;
+	undef %s2;
+	undef %s3;
+	undef %s4;
+	undef %s5;
+	undef %s6;
+	undef %s7;
+	undef %header;
+}
+
+sub store_gdbm {
+
+	syslog(LOG_DEBUG, "Storing cache");
+	if ($header{'TOTAL'} > 0) {
+		store_hash_cnt("$gdbm_outputdir/$fn_s0", \%s0);
+		undef %s0;
+
+		store_hash_cnt("$gdbm_outputdir/$fn_s1", \%s1);
+		undef %s1;
+
+		store_hash_cnt("$gdbm_outputdir/$fn_s2", \%s2);
+		undef %s2;
+
+		store_hash_cnt("$gdbm_outputdir/$fn_s3", \%s3);
+		undef %s3;
+
+		store_hash_str("$gdbm_outputdir/$fn_s7", \%s7);
+		undef %s7;
+	}
+
+	$header{'SIG_COUNT'} = store_hash_cnt("$gdbm_outputdir/$fn_s4", \%s4);
+	undef %s4;
+
+	$header{'SRC_COUNT'} = store_hash_cnt("$gdbm_outputdir/$fn_s5", \%s5);
+	undef %s5;
+
+	$header{'DST_COUNT'} = store_hash_cnt("$gdbm_outputdir/$fn_s6", \%s6);
+	undef %s6;
+
+	my $iff = "$gdbm_outputdir/$fn_header";
+	$header{'NEW_ALERTS'} = $header{'TOTAL'};
+	$header{'NEW_LINES'} = $processedlines;
+	$header{'PROC_TIME'} = sprintf ("%04d-%02d-%02d %02d:%02d", $year + 1900, $mon + 1, $mday, $hour, $min);
+	tie my %tmp_header, 'GDBM_File', $iff, &GDBM_WRCREAT, 0644;
+	my $dbh = tied %tmp_header;
+	if ($dbh) {
+		if (defined $tmp_header{'TOTAL'}) {
+			$header{'TOTAL'} += $tmp_header{'TOTAL'};
+			if ($tmp_header{'STARTTIME'} ne "") { 		
+				$header{'STARTTIME'} = $tmp_header{'STARTTIME'};
+			}
+			if ($header{'NEW_ALERTS'} == 0) {
+				$header{'ENDTIME'} = $tmp_header{'ENDTIME'};
+			}
+		}
+
+		my $kk;
+		my $vv;
+		while (($kk, $vv) = each %header) {
+			$tmp_header{$kk} = $vv;
+		}
+
+		undef $dbh;
+		untie %tmp_header;
+	}
+	else {
+		syslog(LOG_WARNING, "Error writing to $iff");
+	}
+	undef %header;	
+}
+
+sub store_hash_cnt {
+	my $iff = $_[0];
+	my $in_ref = $_[1];
+	my $retval = 0;
+
+	tie my %out_hash, 'GDBM_File', $iff, &GDBM_WRCREAT, 0644;
+
+	my $dbh = tied %out_hash;
+	if ($dbh) {
+		my $kk;
+		my $vv;
+		while (($kk, $vv) = each %{$in_ref}) {
+			if ($out_hash{$kk}) {
+				$out_hash{$kk} += $vv;
+			}
+			else {
+				$out_hash{$kk} = $vv;
+			}
+		}
+		undef $dbh;
+		$retval = scalar keys %out_hash;
+		untie %out_hash;
+	}
+	else {
+		syslog(LOG_WARNING, "Error writing to $iff");
+	}
+	return $retval;
+}
+
+sub store_hash_str {
+	my $iff = $_[0];
+	my $in_ref = $_[1];
+
+	tie my %out_hash, 'GDBM_File', $iff, &GDBM_WRCREAT, 0644;
+
+	my $dbh = tied %out_hash;
+	if ($dbh) {
+		my $kk;
+		my $vv;
+		while (($kk, $vv) = each %{$in_ref}) {
+			$out_hash{$kk} = $vv;
+		}
+		undef $dbh;
+		untie %out_hash;
+	}
+	else {
+		syslog(LOG_WARNING, "Error writing to $iff");
+	}
+}
+
+# Put data $alert into matrix for further process
+# INPUT: $alert
+sub process_data() {
+	my $self = shift;
+	my $parselinedate = $self->{YEAR}.'/'.$self->{MON}.'/'.$self->{DAY}.'.'.$self->{HOUR}.':'.$self->{MIN};
+	my $linedate = Time::ParseDate::parsedate($parselinedate);
+	if ($linedate != 0 && $linedate < $begintime) {
+		return;
+	}
+
+	$self->{SIG} =~ s/\:$//o;
+
+	$s0{"$self->{DADDR},$self->{SADDR},$self->{SID}"}++;
+	$s1{"$self->{SADDR},$self->{DADDR}"}++;
+	$s2{"$self->{SID},$self->{SADDR}"}++;
+	$s3{"$self->{SID},$self->{DADDR}"}++;
+	$s4{"$self->{SID}"}++;
+	$s5{"$self->{SADDR}"}++;
+	$s6{"$self->{DADDR}"}++;
+	$s7{"$self->{SID}"} = $self->{SIG};
+
+	my $key = $self->{SID};
+
+	if (! exists $rrdstats{$key}) {
+		$rrdstats{$key} = { 'alerts' => 0, 'intip' => 0, 'extip' => 0, 'srcdst' => 0};
+		if ($key =~ m/^1\:\d+$/) {
+			$centralheader{'SIG_COUNT'}++;
+		}
+	}
+
+	$rrdstats{$key}{'alerts'}++;
+	if (($s2{"$self->{SID},$self->{SADDR}"} == 1) && (! exists $s3{"$self->{SID},$self->{SADDR}"})) {
+		if (Net::CIDR::cidrlookup($self->{SADDR}, @cidrlist)) {
+			$rrdstats{$key}{'intip'}++;
+		}
+		else {
+			$rrdstats{$key}{'extip'}++;
+		}
+	}
+
+	if (($s3{"$self->{SID},$self->{DADDR}"} == 1) && (! exists $s2{"$self->{SID},$self->{DADDR}"})) {
+		if (Net::CIDR::cidrlookup($self->{DADDR}, @cidrlist)) {
+			$rrdstats{$key}{'intip'}++;
+		}
+		else {
+			$rrdstats{$key}{'extip'}++;
+		}
+	}
+
+	if ($s0{"$self->{DADDR},$self->{SADDR},$self->{SID}"} == 1) {
+		$rrdstats{$key}{'srcdst'}++;
+	}
+
+	if (($s5{"$self->{SADDR}"} == 1) && (! exists $s6{"$self->{SADDR}"})) {
+		if (Net::CIDR::cidrlookup($self->{SADDR}, @cidrlist)) {
+			$header{'INTIP'}++;
+		}
+		else {
+			$header{'EXTIP'}++;
+		}
+	}
+
+	if (($s6{"$self->{DADDR}"} == 1) && (! exists $s5{"$self->{DADDR}"})) {
+		if (Net::CIDR::cidrlookup($self->{DADDR}, @cidrlist)) {
+			$header{'INTIP'}++;
+		}
+		else {
+			$header{'EXTIP'}++;
+		}
+	}
+
+	my $curlinedate = '20'.$self->{YEAR}.'-'.$self->{MON}.'-'.$self->{DAY}.' '.$self->{HOUR}.':'.$self->{MIN};
+	if ($header{'TOTAL'} == 0) {
+		$header{'STARTTIME'} = $curlinedate;
+	}
+	$header{'ENDTIME'} = $curlinedate;
+
+	$header{'TOTAL'}++;
+	if ($key =~ m/^1\:\d+$/) {
+		$centralheader{'TOTAL'}++;
+	}
+}
+
+# send request
+sub sendrequest($$)
+{
+	my ($theurl, $reqstr, $keydir) = @_;
+	my $CURL = new WWW::Curl::Easy;
+
+	my @HEADER = ("Content-Type: application/xml");
+	my @BODY;
+
+	$CURL->setopt(CURLOPT_SSL_VERIFYPEER, 1); 
+	$CURL->setopt(CURLOPT_SSL_VERIFYHOST, 2); 
+	$CURL->setopt(CURLOPT_HEADER, 0);
+	$CURL->setopt(CURLOPT_HTTPHEADER, \@HEADER );
+	$CURL->setopt(CURLOPT_POST, 1);
+	$CURL->setopt(CURLOPT_POSTFIELDS, $reqstr); 
+	$CURL->setopt(CURLOPT_URL, $theurl); 
+
+	$CURL->setopt(CURLOPT_WRITEFUNCTION, \&writeCallback );
+	$CURL->setopt(CURLOPT_HEADERFUNCTION, \&headerCallback );
+	$CURL->setopt(CURLOPT_FILE, \@BODY);
+	$CURL->setopt(CURLOPT_SSLKEY, "$keydir/tuvastaja.key");
+	$CURL->setopt(CURLOPT_SSLCERT, "$keydir/tuvastaja.crt");
+	$CURL->setopt(CURLOPT_CAINFO, "$keydir/cacert.crt");
+
+	$CURL->setopt(CURLOPT_CONNECTTIMEOUT,8); 
+	$CURL->setopt(CURLOPT_FOLLOWLOCATION, 1); 
+	#$CURL->setopt(CURLOPT_VERBOSE,1); 
+
+	# Starts the actual request
+	my $retcode = $CURL->perform;
+
+	# Looking at the results...
+	my %result;
+	$result{'curlresp'} = $retcode;
+
+	if ($retcode == 0) {
+		my $response_code = $CURL->getinfo(CURLINFO_HTTP_CODE);
+		my $xmlansstr= join("", @BODY);
+
+		$result{'httpresp'} = $response_code;
+
+		if ($response_code != 200) {
+			syslog(LOG_INFO, "HTTP POST failed with response: $response_code");
+			syslog(LOG_DEBUG, "$xmlansstr");
+			
+		} else {
+			$result{'httpdata'} = $xmlansstr;
+		}
+	   
+	} else {
+		# 53 SSL probleem
+		my $message = "HTTPS connection failed: ".$CURL->errbuf;
+		syslog(LOG_WARNING, $message);
+	}
+	return(\%result);
+}
+
+
+
+# Callback function that's fired as cURL objects receive chunks of
+# content data from the server.
+sub writeCallback {
+    my ($data, $pointer) = @_;
+
+    push @{$pointer}, $data;
+    return length($data);
+}
+
+# Callback function that's fired as cURL objects receive chunks of
+# header data from the server.  Since we don't need to do anything
+# with the headers for this application, this callback function
+# just returns the length of the data it received.
+sub headerCallback {
+  my($data, $pointer) = @_;
+
+  return length($data);
+}
+

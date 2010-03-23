@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+BASEDIR=/var/www/tuvastaja/ipcounter
+
+. $BASEDIR/variables.sh
+
+FIND_PROC=`pgrep ipaudit`
+
+if [ -z "${FIND_PROC}" ]; then
+	logger "$0: ipaudit process is dead. Restarting."
+	$BASEDIR/newipcounter  >/dev/null 2>&1
+else
+	# running lets send signal
+	pkill -2 ipaudit
+fi
+	
+exit 0

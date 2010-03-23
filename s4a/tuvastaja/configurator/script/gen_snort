@@ -1,0 +1,143 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+#Include functions
+. $CONFROOT/functions.sh
+
+if [ ! -f $VAR_LOCALNETS ]; then
+  HOMENET=""
+else
+  HOMENET=`cat $VAR_LOCALNETS`
+fi
+
+SNORTPATH=/var/www/tuvastaja/snort
+DATADIR=/var/www/tuvastaja/data
+SNORTDATA=$DATADIR/snort
+SNORTVAR=$SNORTDATA/localconf/variables.conf
+CRONSNORT=/tmp/crontab.snortstat
+CRONROOT=/tmp/crontab.snort
+SYSLOG=/etc/newsyslog.conf
+SYSSNORT="$DATADIR/snort-logs/alert.fast   _snort.www 644 400 512000 * \"$SNORTPATH/start-stop-snort restart\""
+SNARFDIR=/var/www/htdocs
+SNORTOMATIC="nice -n 10 $SNORTPATH/snortomatic"
+
+
+# Create user if it does not exist
+create_daemon_user _snort 557
+user mod -g www _snort
+
+# Create directories and set up permissions
+
+make_dir $SNORTPATH/stats
+make_dir $SNORTDATA/localconf
+make_dir $SNORTDATA/conf
+make_dir $SNORTDATA/userdef
+make_dir $SNORTDATA/sid
+
+# TODO
+UPDATERPATH=/var/www/tuvastaja/updater
+STATUSPATH=$UPDATERPATH/status
+make_dir $STATUSPATH
+chown -R _snort $STATUSPATH
+
+make_dir $DATADIR/snort-reports
+chown _snort:www $DATADIR/snort-reports
+
+make_dir $DATADIR/snort-logs
+# TODO: vaja teha aimult yks kord!
+# Kui snorti ymber konfida logisid tais masinas votab
+# see kask hommikuni aega! 
+chown _snort:www $DATADIR/snort-logs
+make_dir $SNORTPATH/stats
+chown _snort:www $SNORTPATH/stats
+
+# Log rotating
+if ! grep -q -R "alert.fast" $SYSLOG; then
+  echo "$SYSSNORT" >> $SYSLOG
+fi
+
+if [ ! -s $VAR_LOCALNETS ]; then
+  exit 0
+fi
+
+# Copy config files
+if [ ! -s $SNORTDATA/conf/classification.config ]; then
+  cp $CONFROOT/static/classification.config $SNORTDATA/conf/classification.config
+fi
+if [ ! -s $SNORTDATA/conf/decoder.conf ]; then
+  cp $CONFROOT/static/decoder.conf $SNORTDATA/conf/decoder.conf
+fi
+if [ ! -s $SNORTDATA/conf/libraries.conf ]; then
+  cp $CONFROOT/static/libraries.conf $SNORTDATA/conf/libraries.conf
+fi
+if [ ! -s $SNORTDATA/conf/preprocessors.conf ]; then
+  cp $CONFROOT/static/preprocessors.conf $SNORTDATA/conf/preprocessors.conf
+fi
+if [ ! -s $SNORTDATA/conf/reference.config ]; then
+  cp $CONFROOT/static/reference.config $SNORTDATA/conf/reference.config
+fi
+if [ ! -s $SNORTDATA/conf/statements.conf ]; then
+  cp $CONFROOT/static/statements.conf $SNORTDATA/conf/statements.conf
+fi
+if [ ! -s $SNORTDATA/conf/unicode.map ]; then
+  cp $CONFROOT/static/unicode.map $SNORTDATA/conf/unicode.map
+fi
+
+# From here on only with the good configuration
+
+# Set localnets and then paste static variables-conf
+if [ -s $VAR_LOCALNETS ]; then
+  if [ ! -z "$HOMENET" ]; then
+    VAR="var HOME_NET ["
+    SEPAR=""
+    for a in $HOMENET; do
+      VAR="$VAR$SEPAR$a"
+      SEPAR=","
+    done
+    VAR="$VAR]"
+    echo "$VAR" > $SNORTVAR
+    cat $CONFROOT/static/variables.conf >> $SNORTVAR
+  fi
+fi
+
+# regenerate plugins.conf (syslog or not)
+cp $CONFROOT/static/plugins.conf $SNORTDATA/conf/plugins.conf
+SYSLOGSERVER=`cat $VAR_SYSLOGSERVER`
+if [ -n "$SYSLOGSERVER" ] && [ "$SYSLOGSERVER" != "$NOSYSLOG" ]; then
+  echo "output alert_syslog: LOG_LOCAL2 LOG_ALERT" >> $SNORTDATA/conf/plugins.conf
+fi
+
+#Random number between 0 and 4
+let R=$RANDOM%5
+
+case "$R" in
+  "0") CRONTASK="0,5,10,15,20,25,30,35,40,45,50,55 * * * * $SNORTOMATIC" ;;
+  "1") CRONTASK="1,6,11,16,21,26,31,36,41,46,51,56 * * * * $SNORTOMATIC" ;;
+  "2") CRONTASK="2,7,12,17,22,27,32,37,42,47,52,57 * * * * $SNORTOMATIC" ;;
+  "3") CRONTASK="3,8,13,18,23,28,33,38,43,48,53,58 * * * * $SNORTOMATIC" ;;
+  "4") CRONTASK="4,9,14,19,24,29,34,39,44,49,54,59 * * * * $SNORTOMATIC" ;;
+esac
+
+# Create crontabs
+crontab -u _snort -l > $CRONSNORT
+if ! grep -q -R "snortomatic" $CRONSNORT; then
+  echo "$CRONTASK" >> $CRONSNORT
+  echo "49 23 * * * $SNORTPATH/statmail" >> $CRONSNORT
+  crontab -u _snort $CRONSNORT
+fi
+rm -rf $CRONSNORT
+
+crontab -l > $CRONROOT
+if ! grep -q -R "start-stop-snort" $CRONROOT; then
+  echo "*/6 * * * * $SNORTPATH/start-stop-snort watchdog" >> $CRONROOT
+  crontab $CRONROOT
+fi
+rm -rf $CRONROOT

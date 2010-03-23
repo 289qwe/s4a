@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+EMAIL=`cat $VAR_ADMIN_EMAIL`
+
+
+DEFAULT_ALIAS=$CONFROOT/static/aliases
+ALIASES=/etc/mail/aliases
+
+cp $DEFAULT_ALIAS $ALIASES
+
+if [ "$EMAIL" = "$NOSYSLOG" ]; then
+  echo "root: /dev/null" >> $ALIASES
+else 
+  echo "root: $EMAIL" >> $ALIASES
+fi
+
+newaliases

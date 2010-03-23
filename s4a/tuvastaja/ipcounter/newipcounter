@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+BASEDIR=/var/www/tuvastaja/ipcounter
+. $BASEDIR/variables.sh
+
+if [ ! -x $BASEDIR/ipcounter ]; then
+	echo "No callback sript $BASEDIR/ipcounter"
+	exit 1;
+fi
+
+# muutujas tyhikutega eraldatud vorgud
+LOCALNETSFILE=/var/www/tuvastaja/data/conf/Localnets.var
+NETARG=""
+
+if [ -f $LOCALNETSFILE ]; then
+	LOCALNET=`cat $LOCALNETSFILE`
+	if [ ! -z "$LOCALNET" ]; then
+		NETARG="-l"
+		SEPAR=""
+		for a in $LOCALNET
+		do
+			NETARG="$NETARG$SEPAR$a"
+			SEPAR=":"
+		done
+		logger Local net string is $NETARG
+	fi
+fi
+	
+	
+
+
+
+# /usr/bin/pkill -9 ipaudit
+/usr/bin/pkill -9 ipaudit
+
+logger /usr/local/bin/ipaudit  -S -H -o$TMPFILE $NETARG  -x$BASEDIR/ipcounter -i/var/run/ipaudit.pid $DEVICE 
+nohup /usr/local/bin/ipaudit  -S -H -o$TMPFILE $NETARG  -x$BASEDIR/ipcounter -i/var/run/ipaudit.pid $DEVICE &
+
+exit 0
+
+

@@ -1,0 +1,178 @@
+.Dd $Mdocdate$
+.Dt S4A-CENTRE 8
+.Os OpenBSD 4.6
+.Sh NAME
+.Nm s4a-centre ,
+.Nm s4a-sig-current ,
+.Nm s4a-sig-check ,
+.Nm s4a-sig-check-current ,
+.Nm s4a-sig-apply ,
+.Nm s4a-sig-revoke
+.Nd S4A Central Server and its utilities
+.Sh DESCRIPTION
+The following is a step-by-step installation guide for the S4A central server.
+.Sh WEB SERVER CONFIGURATION
+1. To configure your Web server for S4A, copy the sample configuration file 
+provided to the Apache configuration directory:
+.D1 Nm cp /var/www/conf/s4a.sample/httpd.conf /var/www/conf/httpd.conf
+.Pp
+2. Copy the sample administration server and configuration server files:
+.D1 Nm cp /var/www/conf/s4a.sample/s4a.conf \ /var/www/conf/s4a/s4a.conf
+.D1 Nm cp /var/www/conf/s4a.sample/s4aconf.conf \ /var/www/conf/s4a/s4aconf.conf
+.Pp
+3. Edit the file s4a.conf and change every occurrence of "YYY.YYY.YYY" to
+the actual administration server's DNS name. Change every occurrence of 
+"XXX.XXX.XXX.XXX" to the actual administration server's IP address.
+.Pp
+4. Edit the file s4aconf.conf and change every occurrence of "YYY.YYY.YYY"
+to the actual configuration/XML-RPC server's DNS name. Change every occurrence
+of "XXX.XXX.XXX.XXX" to the actual configuration/XML-RPC server's IP address.
+.Sh USER INTERFACE CONFIGURATION
+5. To ensure the user interface works correctly, run the command:
+.D1 Nm sh /var/www/conf/s4a.sample/install_chroot
+.Sh WEB SERVER KEYS
+6. Generate SSL keys for the Web server -- change to /var/www/keygen and run
+the command:
+.D1 Nm sh keygen.sh Ar <central-server-name>
+Where <central-server-name> is the administration server's DNS name.
+.Pp
+7. Generate a certificate request for the configuration server certificate:
+.D1 Nm sh webReq.sh Ar <confserv-name>
+Where <confserv-name> is configuration server's DNS name. The resulting confservkey.req file
+must be transported to the CA for certification.
+.Pp
+8. Edit the file /etc/rc.conf.local and add the following line:
+.D1 httpd_flags="-DSSL"
+.Pp
+9. Create the Web server password file:
+.D1 \fBhtdigest\fP [-c] /var/www/conf/webdigest \&"S4A Central Server\&" Ar <username>
+.Pp
+Where <username> (such as "webadmin") is the name under which the Web user interface will be accessed. 
+If the password file already exists, omit the -c option. To enable the activation/deactivation of
+detectors over the Web-based interface, create the user "webroot".
+.Sh WEB SERVER DATABASE
+10. Create the Web server database:
+.D1 Nm sh /var/www/database/create_database.sh
+.Sh SIGNATURE DISTRIBUTION MODULE
+11. Configure the signature distribution module by editing the root crontab and adding the following entries:
+.Bd -ragged -offset indent
+.Pp
+37 04 * * * find /var/www/confserv/signatures \-maxdepth 1 \-type f \-name "signatures\-*\&.tgz"\
+ \-mtime +30 \-print0 \*(Ba xargs \-r \-0 rm \-f
+.Ed
+.Sh SYSLOG
+12. Edit /etc/rc.conf.local and add the following line:
+.D1 syslogd_flags="-a /var/www/dev/log"
+.Pp
+13. Edit /etc/syslog.conf and add the following entry (separate columns with tabs):
+.D1 local3.info			/var/www/confserv-logs/confserv.log
+.Pp
+14. Edit /etc/newsyslog.conf and add the following line:
+.D1 /var/www/confserv-logs/confserv.log 	root:www	644 52 512 *
+.Pp
+15. Restart syslog:
+.D1 Nm pkill syslogd
+.D1 Nm syslogd -a /var/www/dev/log
+.Pp
+\fBMore advanced syslog configurations are possible.\fP For instance, to redirect the output of
+the s4a-writer and s4a-aggregator subprocesses to separate log files, use the following settings:
+.D1 !!s4a-writer
+.D1 Li local3.info		/var/log/s4a-writer.log
+.D1 !*
+.D1 !!s4a-aggregator
+.D1 Li local3.info		/var/log/s4a-aggregator.log
+.D1 !*
+.D1 Li local3.info		/var/www/confserv-logs/confserv.log
+.Pp
+And change /etc/newsyslog.conf as follows:
+.D1 Li /var/log/s4a-writer.log				root:www	644 52 512 *
+.D1 Li /var/log/s4a-aggregator.log			root:www	644 52 512 *
+.D1 Li /var/www/confserv-logs/confserv.log	root:www	644 52 512 *
+.Sh CERTIFICATE INSTALLATION
+16. Copy the certificate files received from the CA to /var/www/conf/certs
+.Sh FINALIZING
+17. To conclude the configuration, restart httpd:
+.D1 Nm apachectl stop
+.D1 Nm apachectl start
+.Sh INSTALLING SIGNATURES
+Installing signatures is necessary for the generation of the file /var/www/etc/s4a-map. The 
+directory /var/www/sigsupporter contains utilities for managing signature sets.
+.Ss s4a-sig-current
+Returns the file name of the latest signature set.
+.Ss s4a-sig-check-current 
+Verifies the current signature set and outputs the results.
+.Ss s4a-sig-check <file>
+Takes as input a .tar file containing signatures, and compares it to the current signature set. 
+The output is a list of differences (additions and removals) between the two.
+.Ss s4a-sig-apply <file>
+Takes as input a .tar file containing signatures and applies the changes within to create a new 
+central server configuration. If a problem occurs, use the s4a-sig-revoke script to undo the changes.
+.Ss s4a-sig-revoke
+Removes the current signature set and replaces it with an earlier one. Use it to restore the
+previous signature set in case the new set doesn't work.
+.Sh RUNNING S4AD AND S4A-DRAW
+To complete the installation of s4a-centre, set up and run the s4ad daemon and the s4a-draw cronjob 
+as follows.
+.Pp
+1) Check that the directory /usr/local/share/s4a exists and the partition has enough free space. 
+To store the RRD data of 100 detectors and 1500 signatures, approximately 5.4 GB of free space is needed.
+.Pp
+2) Run /usr/local/bin/s4ad and then verify with 'ps' that it is running. Check your log files
+for more information -- send 
+.Cm kill -USR1 
+to s4ad to force logging, and turn on the \fBlocal3.debug\fP facility to log even more information.
+.Pp
+3) Check that the socket /var/www/tmp/s4a exists and is readable to user _s4ad.
+.Pp
+4) Check that the file /tmp/s4ad.lock exists.
+.Pp
+5) Check that the directory /usr/local/share/s4a/detectors exists and is writable to user _s4ad.
+.Pp
+6) Install the s4a-draw cronjob, which generates PNG graphs for the Web page:
+.D1 */5 * * * * /usr/local/bin/s4a-draw
+.Sh MANAGING DETECTORS
+To add new detectors to the central server database, run the command:
+.D1 Cm update_db \-f <certfile>
+Where <certfile> is an X.509 certificate with the following Distinguished Name fields set:
+.D1 countryName
+.D1 localityName
+.D1 organizationName
+.D1 organizationalUnitName
+.D1 commonName
+.Sh MANAGING PATCHES
+The following steps must be carried out in another computer. 
+.Ss Preliminary steps
+1) You will receive two packaging scripts from the software developer. Unpack them to a directory 
+of your choice, such as /tmp, which also creates the s4a-patch subdirectory.
+.Pp
+2) Use 'genpatchkey.sh' to create a private key (s4apatch.key) and a certificate request for packaging. 
+.Pp
+3) Transport the certificate request to the S4A Certification Authority to receive a certificate
+(s4apatch.pem). Copy both the .key and .pem to /tmp/s4a-patch
+.Ss Packaging
+It is assumed that you have received from the software developer an archive (such as 
+4.6.1.tar.gz) containing BSD packages to be signed.
+.Pp
+1) Unpack the archive to a temporary directory:
+.D1 tar xzf 4.6.1.tar.gz -C /tmp/s4a-patch
+.Pp
+2) Install each package in the archive:
+.D1 pkg_add /tmp/s4a-patch/4.6.1/packages/filename.tgz
+.Pp
+3) Change to /tmp/s4a-patch and sign the packages:
+.D1 pkg_create -f /var/db/pkg/package-name/+CONTENTS \-s x509 \-s s4apatch.pem \-s s4apatch.key
+Where s4apatch.pem is the certificate and s4apatch.key the key for packaging.
+.Pp
+4) Replace the original packages with new, signed packages:
+.D1 mv package-name.tgz /tmp/s4a-patch/4.6.1/packages/package-name.tgz
+.Pp
+5) Change to 4.6.1 and create a new patch set:
+.D1 ../s4apatch.sh
+.Pp
+6) Transport the new patch set to the central server.
+.Sh AUTHORS
+The 
+.Nm 
+package is maintained by:
+.D1 Cybernetica AS 
+.D1 http://www.cybernetica.eu

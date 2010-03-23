@@ -1,0 +1,71 @@
+.Dd $Mdocdate$
+.Dt RULESM 8
+.Os OpenBSD 4.6
+.Sh NAME
+.Nm s4a-rulesm
+.Nd Utilities for managing S4A rules
+.Sh DESCRIPTION
+The package contains three utilities:
+.D1 1) oinkmaster -- loads and updates rules
+.D1 2) dumbpig -- verifies rules
+.D1 3) addsid.pl -- adds and verifies new SIDs
+.Sh MANAGING RULES
+1. Copy the rules to a temporary directory
+.D1 oinkmaster -C /usr/local/s4a-rulesm/s4a.sample/oinkmaster.conf \
+\-u protocol://source-rules1 \-u protocol://source-rules2 -o /path/to/temprulesdir
+Rules can be loaded over a network using HTTP(S), SCP, or FTP, or from
+a local computer by supplying a file name or directory path.
+.Pp
+Attention: The source rules file must be a .tar archive containing the directory "rules"
+(except for the 'dir' method, whereby a specific directory is provided). See 'man oinkmaster'
+for details.
+.Pp
+The s4a-rulesm package is equipped with a sample oinkmaster configuration file
+(/usr/local/s4a-rulesm/s4a.sample/oinkmaster.conf), which should be used as a basis
+for more complicated configurations.
+.Pp
+2. To create your own rule, write it in the *.rules file by following the standard Snort
+rules format. After the necessary rules have been added, run the command
+.D1 Cm addsid.pl /path/to/temprulesdir
+The command adds a SID and a revision number to new rules. Additionally, the classtype
+"classtype:misc-attack" will be added if the field was not set.
+.Pp
+3. To activate or deactivate a rule, find out its SID and write it to oinkmaster.conf:
+.D1 Cm enablesid <SID>
+.D1 or
+.D1 Cm disablesid <SID>
+.Pp
+4. To freeze a rule for local use (so that the ensuing updates do not overwrite it), 
+write to oinkmaster.conf:
+.D1 Cm localsid <SID>
+.Pp
+5. To modify a rule, write to oinkmaster.conf:
+.D1 \fBmodifySID <SID> \&"source regular expression\&" \&| \&"target regular expression\&"\fP
+.Pp
+6. To activate or deactivate all rules in a rules file, write to oinkmaster.conf:
+.D1 to deactivate:
+.D1 Cm modifysid rulesfile.rules \&"^\&" \&| \&"#\&"
+.D1 to activate:
+.D1 Cm modifysid rulesfile.rules \&"^#*\&" \&| \&"\&"
+For more examples, see /usr/local/s4a-rulesm/s4a.sample/oinkmaster.conf 
+and /etc/oinkmaster.conf.
+.Pp
+7. To verify all rules, run the command:
+.D1 Cm dumbpig \-s [0\-3] \-d \-r rulesfile.rules
+Where the number after \-s indicates the sensitivity level (3 is the most strict, 0 the least). It is
+recommended to use the \-d key to verify also deactivated rules.
+.Pp
+8. If dumbpig reports the rules to be correct, use oinkmaster to create an official rule set
+that can be transported to the S4A central server.
+.D1 oinkmaster \-C /usr/local/s4a-rulesm/s4a.sample/oinkmaster.conf \
+\-u dir:///path/to/temprulesdir \-o /path/to/currentrulesdir/sid/
+The latter directory should be packed to a .tar.gz archive and transported to the central server.
+.Pp
+Attention: Do not rely only on dumbpig and oinkmaster to assess whether the rules work. In order to make
+sure that the rules actually catch the desired events, test them with Snort.
+.Sh AUTHORS
+The 
+.Nm 
+package is maintained by:
+.D1 Cybernetica AS 
+.D1 http://www.cybernetica.eu

@@ -1,0 +1,57 @@
+.Dd $Mdocdate$
+.Dt S4A-CA 8
+.Os OpenBSD 4.6
+.Sh NAME
+.Nm s4a-ca
+.Nd S4A Certification Authority
+.Sh DESCRIPTION
+s4a-ca is a command-line utility for managing the S4A certification authority.
+.Sh ENVIRONMENT
+Set the binary files directory using the command:
+.D1 Nm export S4A_CA_BIN=/usr/local/s4a-ca
+It is recommended to add the above line to 
+.Pa $HOME/.profile
+.Sh USAGE
+To set the CA keyfile password and create a self-signed root certificate, use the command:
+.D1 Nm /usr/local/s4a-ca/s4a-ca-create.sh
+.Pp
+To change the CA keyfile password, use the command:
+.D1 Nm /usr/local/s4a-ca/s4a-ca-passwd.sh
+.Pp
+To create configuration server certificates, use the command:
+.D1 Nm /usr/local/s4a-ca/s4a-central-cert.sh Ar confservkey.req
+Where "confservkey.req" is the certificate request file created in the central server.
+.Pp
+To display the information in a certificate request, use the command:
+.D1 Nm /usr/local/s4a-ca/s4a-request-show.sh Ar cert.req
+Where "cert.req" is the certificate request file.
+.Pp
+To issue detector certificates, use the command:
+.D1 \fB/usr/local/s4a-ca/s4a-detector-cert.sh\fP \fI<shortname> <fullname> <description> <certificate-request-file> <confserv-crt-file>\fP
+Where the parameters in brackets must be substituted with actual values. Double-quotes " can be used to insert spaces into text-fields.
+.Pp
+To issue patching certificates, use the command:
+.D1 Nm /usr/local/s4a-ca/s4a-patch-cert.sh Ar <patch-certificate-request-file>
+.Pp
+s4a-detector-cert.sh and s4a-central-cert.sh utilities shall include all PEM-encoded certificates found in bundle.pem file to the 
+resulting tar-balls. The bundle.pem file must be located in S4A_CA_BIN directory. This is handy in case of higher certification hierarchies 
+where it is necessary to transport all intermediate CA certificates and root certificate to detectors and central server.
+.Sh CAVEATS
+All detector and configuration server keys must be transported to 
+the S4A central server over a secure channel.
+.Pp
+The S4A servers expect certain fields to be present in the certificates issued. When issuing
+the configuration server certificate, make sure to provide the server's DNS name, since the
+detectors will be using that name to connect to the configuration server.
+.Sh UNINSTALL
+To uninstall s4a-ca, log in as root and enter:
+.D1 Nm pkg_delete s4a-ca
+.D1 Nm rm -rf /usr/local/s4a-ca
+.Em Warning: 
+the commands will also remove all certificates.
+.Sh AUTHORS
+The 
+.Nm 
+package is maintained by:
+.D1 Cybernetica AS 
+.D1 http://www.cybernetica.eu

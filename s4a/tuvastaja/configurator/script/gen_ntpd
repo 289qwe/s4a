@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+if [ ! -s $VAR_NTP_SERVER ]; then
+  exit 0
+fi
+
+NTPSERV=`cat $VAR_NTP_SERVER`
+
+
+NTPCFG=/etc/ntpd.conf
+
+echo -n "# generated: " > $NTPCFG
+echo `date` >> $NTPCFG
+
+echo "listen on 127.0.0.1" >> $NTPCFG
+echo "server $NTPSERV" >> $NTPCFG
+
+if [ -f /etc/rc.conf.local ]; then
+  if ! grep -q -R "ntpd_flags=\"-s\"" /etc/rc.conf.local; then
+    echo "ntpd_flags=\"-s\"         # enabled during install" >> /etc/rc.conf.local
+    exit 0
+  fi
+else
+  echo "ntpd_flags=\"-s\"         # enabled during install" > /etc/rc.conf.local
+fi
