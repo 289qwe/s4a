@@ -48,9 +48,10 @@ echo Starting installation...
 # Find disks
 ALLDRIVES=`sysctl -n hw.disknames | sed 's/,/ /g'`
 
+# filter out cd* and fd*
 NOCD="$ALLDRIVES"
 for i in $ALLDRIVES; do
-  if echo $i | grep -q "cd"; then
+  if echo $i | grep -q "^cd" || echo $i | grep -q "^fd"; then
     NOCD=`echo $NOCD | sed "s/\(.*\)$i\(.*\)/\1\2/"`
   fi
 done
@@ -80,18 +81,18 @@ for i in $DISKDRIVES; do
 done
 
 # Only one disk
-if echo $DISKDRIVES | grep -q "^[a-z]d[0-9]$"; then
+if echo $DISKDRIVES | grep -q "^[a-z][a-z][0-9]$"; then
+  # trim spaces
   DISK=`echo $DISKDRIVES`
   echo "Found only one disk: $DISK"
 else
-  echo "Choose one of the following disks above typing its name (e.g. \"wd0\")"
+  echo "Choose one of the disks above by typing its name (e.g. \"wd0\")"
   diskok=1
   while [ $diskok -ne 0 ]; do
-    echo -n "which disk to choose for install? "
+    echo -n "What disk to use for installation? "
     read DISKANSWER
-    if echo $DISKDRIVES | ! grep -q $DISKANSWER; then
-      echo "No such disk"
-      diskok=1
+    if ! test -b /dev/"$DISKANSWER"c; then
+      echo "No disk /dev/$DISKANSWER"
     else
       echo "You have chosen the following disk: $DISKANSWER"
       DISK=$DISKANSWER

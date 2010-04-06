@@ -1,10 +1,10 @@
 # $OpenBSD: Makefile,v 1.54 2009/08/16 13:31:27 rui Exp $
 
-VERSION = 		4.6.8
+VERSION = 		4.6.9
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
-CATEGORIES =		cyber
+CATEGORIES =		net
 HOMEPAGE =		http://www.cyber.ee
 MAINTAINER =		Cybernetica AS, www.cyber.ee	
 
@@ -22,7 +22,6 @@ RUN_DEPENDS =		\
 			dialog::misc/dialog \
 			ipaudit::net/ipaudit \
 			iplog::net/iplog \
-			lsof::sysutils/lsof \
 			mrtg::net/mrtg \
 			nagios-plugins-snmp::net/nagios/plugins,-snmp \
 			nrpe::net/nagios/nrpe \
@@ -39,7 +38,6 @@ RUN_DEPENDS =		\
                         p5-WWW-Curl::www/p5-WWW-Curl \
 			php5-dba::www/php5/extensions,-dba \
 			snort::net/snort \
-			tcptraceroute::net/tcptraceroute 
 
 PREFIX=/var/www
 
