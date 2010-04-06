@@ -23,7 +23,7 @@ crontab -l > $CRONFILE
 if ! grep -q -R "updater" $CRONFILE; then
   echo "30 * * * * $UPDATERPATCH" >> $CRONFILE
   echo "*/6 * * * * $UPDATERSIG" >> $CRONFILE
-  echo "0 2 * * * /var/www/tuvastaja/configurator/disk-cleanup.pl" >> $CRONFILE
+  echo "0 2,8,14,20 * * * /var/www/tuvastaja/configurator/disk-cleanup.pl" >> $CRONFILE
   crontab $CRONFILE
 fi
 rm -rf $CRONFILE

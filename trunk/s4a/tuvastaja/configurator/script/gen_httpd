@@ -24,7 +24,7 @@ make_dir $HTTPINDEX
 make_dir $HTTPROOT/php5
 
 # Setting up static httpd.conf
-if ! grep -q -R "s4a" $HTTPROOT/httpd.conf; then
+if ! grep -q -R "conf/s4a/" $HTTPROOT/httpd.conf; then
   cp $CONFROOT/static/httpd.conf $HTTPROOT/httpd.conf
 fi
 

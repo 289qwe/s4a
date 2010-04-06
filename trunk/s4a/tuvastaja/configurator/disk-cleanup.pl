@@ -5,7 +5,7 @@
 
 use Filesys::Df;
 
-$max_percent = 90;
+$max_percent = 80;
 
 sub disk_used {
 	my $fs = shift @_;
