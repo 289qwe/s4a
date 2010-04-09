@@ -6,7 +6,7 @@
 use strict;
 use warnings;
 
-require "/var/www/sigsupporter/sighelper.pm";
+require "/usr/local/s4a-centre/sigsupporter/sighelper.pm";
 
 my $cursigfile;
 my $res = get_current(\$cursigfile);
