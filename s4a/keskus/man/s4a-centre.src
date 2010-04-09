@@ -12,9 +12,9 @@
 .Sh DESCRIPTION
 The following is a step-by-step installation guide for the S4A central server.
 .Sh WEB SERVER CONFIGURATION
-1. To configure your Web server for S4A, copy the sample configuration file 
+1. To configure your Web server for S4A, symlink the sample configuration file 
 provided to the Apache configuration directory:
-.D1 Nm cp /var/www/conf/s4a.sample/httpd.conf /var/www/conf/httpd.conf
+.D1 Nm ln -sf /var/www/conf/s4a.sample/httpd.conf /var/www/conf/httpd.conf
 .Pp
 2. Copy the sample administration server and configuration server files:
 .D1 Nm cp /var/www/conf/s4a.sample/s4a.conf \ /var/www/conf/s4a/s4a.conf
@@ -28,10 +28,10 @@ the actual administration server's DNS name. Change every occurrence of
 to the actual configuration/XML-RPC server's DNS name. Change every occurrence
 of "XXX.XXX.XXX.XXX" to the actual configuration/XML-RPC server's IP address.
 .Sh USER INTERFACE CONFIGURATION
-5. To ensure the user interface works correctly, run the command:
-.D1 Nm sh /var/www/conf/s4a.sample/install_chroot
+5. To ensure the user interface works correctly, set webserver localtime creating corresponding symbolic link to
+.D1 Nm /var/www/etc/localtime
 .Sh WEB SERVER KEYS
-6. Generate SSL keys for the Web server -- change to /var/www/keygen and run
+6. Generate SSL keys for the Web server -- change to /usr/local/s4a-centre/keygen and run
 the command:
 .D1 Nm sh keygen.sh Ar <central-server-name>
 Where <central-server-name> is the administration server's DNS name.
@@ -89,14 +89,14 @@ And change /etc/newsyslog.conf as follows:
 .D1 Li /var/log/s4a-aggregator.log			root:www	644 52 512 *
 .D1 Li /var/www/confserv-logs/confserv.log	root:www	644 52 512 *
 .Sh CERTIFICATE INSTALLATION
-16. Copy the certificate files received from the CA to /var/www/conf/certs
+16. Copy the certificate files received from the CA to /etc/ssl/
 .Sh FINALIZING
 17. To conclude the configuration, restart httpd:
 .D1 Nm apachectl stop
 .D1 Nm apachectl start
 .Sh INSTALLING SIGNATURES
 Installing signatures is necessary for the generation of the file /var/www/etc/s4a-map. The 
-directory /var/www/sigsupporter contains utilities for managing signature sets.
+directory /usr/local/s4a-centre/sigsupporter contains utilities for managing signature sets.
 .Ss s4a-sig-current
 Returns the file name of the latest signature set.
 .Ss s4a-sig-check-current 

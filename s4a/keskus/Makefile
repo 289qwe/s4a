@@ -16,6 +16,7 @@ MANSRC=s4a-centre.src
 MANOUT=s4a-centre.0
 MAN=${PREFIX}/../../usr/local/man/cat8
 BIN=${PREFIX}/../../usr/local/bin
+S4ACENTRE=${PREFIX}/../../usr/local/s4a-centre
 
 all:
 	@(cd $(S4AD); $(MAKE) all)
@@ -26,8 +27,8 @@ install:
 	mkdir -p $(PREFIX)/$(CONFSERV)
 	mkdir -p $(PREFIX)/$(CONFSERVLOGS)
 	mkdir -p $(PREFIX)/$(DATABASE)
-	mkdir -p $(PREFIX)/$(KEYGEN)
-	mkdir -p $(PREFIX)/$(SIGSUPPORTER)
+	mkdir -p $(S4ACENTRE)/$(KEYGEN)
+	mkdir -p $(S4ACENTRE)/$(SIGSUPPORTER)
 	mkdir -p $(PREFIX)/$(S4AVIEW)
 	mkdir -p $(PREFIX)/$(S4AVIEW)/detectors
 	mkdir -p $(PREFIX)/$(S4AVIEW)/sigs
@@ -36,9 +37,10 @@ install:
 
 	touch $(PREFIX)/$(CONFSERVLOGS)/confserv.log
 
-	$(INSTALL) $(CONF) $(CONFSERV) $(DATABASE) $(KEYGEN) $(SIGSUPPORTER) $(S4AVIEW) $(PREFIX)/
+	$(INSTALL) $(CONF) $(CONFSERV) $(DATABASE) $(S4AVIEW) $(PREFIX)/
+	$(INSTALL) $(KEYGEN) $(SIGSUPPORTER) $(S4ACENTRE)/
 	chgrp -R wheel $(PREFIX)/$(CONF) $(PREFIX)/$(CONFSERV) $(PREFIX)/$(CONFSERVLOGS) \
-	$(PREFIX)/$(DATABASE) $(PREFIX)/$(KEYGEN) $(PREFIX)/$(SIGSUPPORTER) $(PREFIX)/$(S4AVIEW)
+	$(PREFIX)/$(DATABASE) $(S4ACENTRE)/$(KEYGEN) $(S4ACENTRE)/$(SIGSUPPORTER) $(PREFIX)/$(S4AVIEW)
 	chgrp www $(PREFIX)/tmp
 	chgrp www $(PREFIX)/$(S4AVIEW)/detectors
 	chgrp www $(PREFIX)/$(S4AVIEW)/sigs

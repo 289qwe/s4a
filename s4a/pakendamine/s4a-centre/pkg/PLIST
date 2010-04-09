@@ -1,10 +1,8 @@
 @comment $OpenBSD$
 @newuser _s4ad:699:www:daemon:S4ADaemon Account:/nonexistent:/sbin/nologin
-conf/certs/
 conf/s4a/
 conf/s4a.sample/
 conf/s4a.sample/httpd.conf
-conf/s4a.sample/install_chroot
 conf/s4a.sample/s4a.conf
 conf/s4a.sample/s4aconf.conf
 confserv/
@@ -22,18 +20,14 @@ database/show_detector.php
 database/triggerts.sql
 database/update_db.php
 etc/
-keygen/
-keygen/keygen.sh
-keygen/webReq.sh
-keygen/webconf.cnf
 s4a-view/
+s4a-view/activate.php
+s4a-view/detector.php
 @owner _s4ad
 @group www
 s4a-view/detectors/
 @owner
 @group
-s4a-view/activate.php
-s4a-view/detector.php
 s4a-view/detectors.php
 s4a-view/images/
 s4a-view/images/icon_alert.png
@@ -49,18 +43,20 @@ s4a-view/s4a.css
 @group www
 s4a-view/sigs/
 @owner
-@group
-sigsupporter/
-sigsupporter/s4a-sig-apply
-sigsupporter/s4a-sig-check
-sigsupporter/s4a-sig-check-current
-sigsupporter/s4a-sig-current
-sigsupporter/s4a-sig-revoke
-sigsupporter/sighelper.pm
-@group www
 tmp/
 @group
 @cwd /usr/local
+s4a-centre/keygen/
+s4a-centre/keygen/keygen.sh
+s4a-centre/keygen/webReq.sh
+s4a-centre/keygen/webconf.cnf
+s4a-centre/sigsupporter/
+s4a-centre/sigsupporter/s4a-sig-apply
+s4a-centre/sigsupporter/s4a-sig-check
+s4a-centre/sigsupporter/s4a-sig-check-current
+s4a-centre/sigsupporter/s4a-sig-current
+s4a-centre/sigsupporter/s4a-sig-revoke
+s4a-centre/sigsupporter/sighelper.pm
 @man man/cat8/s4a-centre.0
 @man man/cat8/s4a-sig-current.0
 @man man/cat8/s4a-sig-check-current.0

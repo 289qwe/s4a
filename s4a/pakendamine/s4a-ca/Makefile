@@ -4,17 +4,16 @@ VERSION=		4.6.5
 COMMENT =		S4A CA software 
 DISTNAME =		s4a-ca-${VERSION}
 
-CATEGORIES =		cyber
-HOMEPAGE =		http://www.cyber.ee
-MAINTAINER =		Cybernetica AS, www.cyber.ee	
+CATEGORIES =		net
+HOMEPAGE =		http://www.cybernetica.eu
+MAINTAINER =		Cybernetica AS
 
 PERMIT_PACKAGE_CDROM =	Yes
 PERMIT_PACKAGE_FTP =	Yes
 PERMIT_DISTFILES_CDROM =Yes
 PERMIT_DISTFILES_FTP =	Yes
 
-#MASTER_SITES =		http://ondatra.cyber.ee/~sven/	
-MASTER_SITES =		http://ondatra.cyber.ee/~mattu/tuvastaja/
+#MASTER_SITES =		http://yourserver.address.com/~developer/	
 
 PATCH_DIST_STRIP =	-p0
 

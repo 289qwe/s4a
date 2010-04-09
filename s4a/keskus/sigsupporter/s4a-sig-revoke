@@ -8,7 +8,7 @@ use warnings;
 use File::Copy;
 
 
-require "/var/www/sigsupporter/sighelper.pm";
+require "/usr/local/s4a-centre/sigsupporter/sighelper.pm";
 
 my $force = $ARGV[0];
 

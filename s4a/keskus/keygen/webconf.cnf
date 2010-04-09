@@ -19,9 +19,9 @@ countryName_min			= 2
 countryName_max			= 2
 
 0.organizationName		= Organization Name (eg, company)
-0.organizationName_default	= Cybernetica AS
+0.organizationName_default	= Your Company Ltd
 
-commonName			= s4a.cyber.ee
+commonName			= your.company.com
 commonName_max			= 64
 
 [ req_attributes ]

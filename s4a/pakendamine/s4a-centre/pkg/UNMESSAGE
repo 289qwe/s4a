@@ -4,8 +4,8 @@ following steps as root:
 
  rm -f ${PREFIX}/conf/httpd.conf
  rm -rf ${PREFIX}/conf/s4a
- rm -rf ${PREFIX}/conf/keygen
- rm -f ${PREFIX}/conf/haldusdigest
+ rm -rf /usr/local/s4a-centre/keygen
+ rm -f ${PREFIX}/conf/webdigest
  rm -f ${PREFIX}/bin/s4ad
  rm -f ${PREFIX}/bin/rrdtool
  rm -f ${PREFIX}/bin/sh

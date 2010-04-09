@@ -7,7 +7,7 @@ use strict;
 use warnings;
 use File::Copy;
 
-require "/var/www/sigsupporter/sighelper.pm";
+require "/usr/local/s4a-centre/sigsupporter/sighelper.pm";
 
 my $s4a_map = "/var/www/etc/s4a-map";
 my $sigdir = "/var/www/confserv/signatures";

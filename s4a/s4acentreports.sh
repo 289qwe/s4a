@@ -10,7 +10,7 @@ PWD=`pwd`
 ROOT=$PWD
 CENTRE=s4a-centre
 
-VER=4.6.1
+VER=4.6.2
 
 ARCHIVE=$CENTRE-$VER.tar.gz
 

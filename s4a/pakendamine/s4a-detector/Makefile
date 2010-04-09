@@ -5,16 +5,15 @@ COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
 CATEGORIES =		net
-HOMEPAGE =		http://www.cyber.ee
-MAINTAINER =		Cybernetica AS, www.cyber.ee	
+HOMEPAGE =		http://www.cybernetica.eu
+MAINTAINER =		Cybernetica AS
 
 PERMIT_PACKAGE_CDROM =	Yes
 PERMIT_PACKAGE_FTP =	Yes
 PERMIT_DISTFILES_CDROM =Yes
 PERMIT_DISTFILES_FTP =	Yes
 
-#MASTER_SITES =		http://ondatra.cyber.ee/~sven/	
-MASTER_SITES =		http://ondatra.cyber.ee/~mattu/tuvastaja/
+#MASTER_SITES =		http://yourserver.address.com/~developer/	
 
 PATCH_DIST_STRIP =	-p0
 
