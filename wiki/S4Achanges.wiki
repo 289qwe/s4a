@@ -1,0 +1,29 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+
+Here are information from changes about s4a software updates
+
+
+= Changes =
+
+== s4a-detector ==
+=== 4.6.9 ===
+
+ * lsof and traceroute removed from s4a-detector package dependencies
+ * installer fixes (detect floppy-disks etc)
+ * package category changed to "net"
+ * more agressive disk cleanup
+ * changes in filenames, folders etc (s4a)
+
+== s4a-centre ==
+=== 4.6.2 ===
+
+ * metaauto, nrpe, p5-proc-processtable and p5-www-curl removed from s4a-centre package dependencies
+ * sigsupporter, keygen moved away from apache chroot
+ * certificates moved to /etc/ssl, keys to /etc/ssl/private, as common case in OpenBSD.
+ * keygen and webreq doesn't overwrite keys/certs, olds would be renamed if exist.
+ * removed install_chroot script
+ * changes in filenames, folders etc (s4a)
+ * no +x flags anymore on php-files
+ * package category changed to "net"
