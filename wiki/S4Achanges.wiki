@@ -1,9 +1,4 @@
-#summary One-sentence summary of this page.
-
-= Introduction =
-
-Here are information from changes about s4a software updates
-
+#summary Here are information from changes about s4a software updates
 
 = Changes =
 
