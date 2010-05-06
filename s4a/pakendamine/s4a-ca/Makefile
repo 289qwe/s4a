@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.54 2009/08/16 13:31:27 rui Exp $
 
-VERSION=		4.6.5
+VERSION=		4.6.6
 COMMENT =		S4A CA software 
 DISTNAME =		s4a-ca-${VERSION}
 

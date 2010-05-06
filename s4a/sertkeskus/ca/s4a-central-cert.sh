@@ -46,9 +46,13 @@ rm -f "$NEWCERT"
 
 $S4A_CA_OPENSSL ca -config $CONFIG -in $NEWREQ -out $NEWCERT -extensions web_cert -passin file:"$S4A_CURRENT_PASS"
 
-if [ -f "$BUNDLE_FILE" ]
+if [ -d "$BUNDLE_DIR" ]
 then
-	cat $BUNDLE_FILE >> $NEWCACERT
+	LIST=`ls "$BUNDLE_DIR"`
+	for each in $LIST
+	do
+		cat "$BUNDLE_DIR"/$each >> $NEWCACERT
+	done
 fi
 
 tar -C $TEMP_DIR -czf $NEWTAR "$NEWCERTFILE" "$CACERTFILE"

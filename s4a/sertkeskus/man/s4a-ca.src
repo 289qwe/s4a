@@ -33,8 +33,8 @@ Where the parameters in brackets must be substituted with actual values. Double-
 To issue patching certificates, use the command:
 .D1 Nm /usr/local/s4a-ca/s4a-patch-cert.sh Ar <patch-certificate-request-file>
 .Pp
-s4a-detector-cert.sh and s4a-central-cert.sh utilities shall include all PEM-encoded certificates found in bundle.pem file to the 
-resulting tar-balls. The bundle.pem file must be located in S4A_CA_BIN directory. This is handy in case of higher certification hierarchies 
+s4a-detector-cert.sh and s4a-central-cert.sh utilities shall include all PEM-encoded certificates found in bundle directory to the 
+resulting tar-balls. The bundle directory must be located in S4A_CA_BIN directory. This is handy in case of higher certification hierarchies 
 where it is necessary to transport all intermediate CA certificates and root certificate to detectors and central server.
 .Sh CAVEATS
 All detector and configuration server keys must be transported to 
