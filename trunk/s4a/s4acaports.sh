@@ -10,7 +10,7 @@ PWD=`pwd`
 ROOT=$PWD
 CA=s4a-ca
 
-VER=4.6.5
+VER=4.6.6
 
 ARCHIVE=$CA-$VER.tar.gz
 

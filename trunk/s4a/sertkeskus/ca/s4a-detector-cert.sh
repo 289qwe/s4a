@@ -86,9 +86,13 @@ NEWTAR="$TEMP_DIR/$SUBJEKT.tgz"
 rm -f "$NEWCERT" "$NEWTAR" 
 $S4A_CA_OPENSSL ca -config $CONFIG -in $NEWREQ -out $NEWCERT  -extensions usr_cert -subj "$DISNAME" -passin file:"$S4A_CURRENT_PASS"
 
-if [ -f "$BUNDLE_FILE" ]
+if [ -d "$BUNDLE_DIR" ]
 then
-	cat $BUNDLE_FILE >> $NEWCACERT
+	LIST=`ls "$BUNDLE_DIR"`
+	for each in $LIST
+	do
+		cat "$BUNDLE_DIR"/$each >> $NEWCACERT
+	done
 fi
 
 if [ -f "$NEWPATCHCERT" ]

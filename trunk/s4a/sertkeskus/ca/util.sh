@@ -24,7 +24,7 @@ init_ca() {
 
 	CA_DIR="$S4A_CA_BIN/cafiles"
 	CONFIG="$S4A_CA_BIN/s4a-ca.cnf"
-	BUNDLE_FILE="$S4A_CA_BIN/bundle.pem"
+	BUNDLE_DIR="$S4A_CA_BIN/bundle"
 	CERTS_DIR="$CA_DIR/certs"
 	CRL_DIR="$CA_DIR/crl"
 	NEW_CERTS_DIR="$CA_DIR/newcerts"
