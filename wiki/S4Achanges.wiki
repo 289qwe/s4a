@@ -22,3 +22,8 @@
  * changes in filenames, folders etc (s4a)
  * no +x flags anymore on php-files
  * package category changed to "net"
+
+== s4a-ca ==
+=== 4.6.6 ===
+
+ * bundle.pem file replaced to bundle directory where PEM-encoded certificates can be hold for including them to the detector's or centralserver's certificate-sets.
