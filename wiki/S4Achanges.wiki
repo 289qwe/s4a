@@ -11,6 +11,33 @@
  * more agressive disk cleanup
  * changes in filenames, folders etc (s4a)
 
+=== 4.7.0 ===
+
+ * migrated to OpenBSD 4.7 official release
+ * more uniform code-style
+ * fixed disk-cleanup usage
+ * removed developer specific addresses
+ * fixed creating static configuration
+ * fixed configuring mail-settings (automatically preset as syslog)
+ * improved apache ssl-keys storing
+ * nicer crontab lines
+ * improved DNS request before loading certificates
+ * fixed installing patches (2 or more bsd-packages in one patch)
+ * fixed snort behaviour on DST-cases
+ * removed unnecessary folders and files from the package
+ * fixed mounting USB-device (filters floppies out)
+ * improved generating pf.conf
+ * improved snort preprocessors configuration
+ * improved compromise history in webinterface (checkbox for preprocessors)
+ * snort preprocessors information doesn't send to the central server
+ * abandoned SNMP, using scripts to collect data
+ * net-snmp, nagios-plugins-snmp, libnet removed from s4a-detector package dependencies
+ * improved rrd-graphs, more uniform logic
+ * '-' is allowd in hostname
+ * fixed creating /etc/rc.local
+ * improved network devices descriptions
+ * improvments installing s4a-detector to the empty OpenBSD machine from package
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -22,6 +49,11 @@
  * changes in filenames, folders etc (s4a)
  * no +x flags anymore on php-files
  * package category changed to "net"
+
+=== 4.6.3 ===
+
+ * improved adding detectors to the database: command argument is tgz-archive-file that comes from s4a-ca; added batch-mode capability.
+ * fixed sigsupporter module where current sigfile info stores universal file.
 
 == s4a-ca ==
 === 4.6.6 ===
