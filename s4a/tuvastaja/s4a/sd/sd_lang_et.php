@@ -168,7 +168,7 @@ $VARIABLES_OPTIONAL=array(
 	'Admin_Email' => 'Administraatori meiliaadress',
 	'SMTP' => 'Tuvastaja meilivahendaja aadress',
 	'Syslogserver' => 'Väline süsteemse logi server',
-	'SNMP_server' => 'Välise seiresüsteemi aadress (SNMP)',
+	'SNMP_server' => 'Välise seiresüsteemi aadress',
 	'Ro_community' => 'Välise seiresüsteemi community nimi (SNMP)',
 	'Second_central' => 'Sekundaarne keskserver'
 );

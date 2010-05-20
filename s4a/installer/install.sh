@@ -4,7 +4,7 @@
 
 
 MAJ=4			# Version major number
-MIN=6			# Version minor number
+MIN=7			# Version minor number
 arch=i386		# Archidecture
 TZ=Europe/Tallinn	# Time zones are in /usr/share/zoneinfo
 SETS="comp man misc xbase site"
@@ -75,7 +75,7 @@ for i in $NOCD; do
 done
 
 # Print choices
-echo "Available disks are:\n"
+echo "Available disks are:"
 for i in $DISKDRIVES; do
   echo "$i: `disklabel -h $i | grep label | sed 's/label: //'` - `disklabel -h $i | grep 'total bytes' | sed 's/.*total bytes: //'`"
 done

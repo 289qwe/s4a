@@ -15,7 +15,7 @@ fi
 
 # All network interfaces from ifconfig
 IPDEVS=`ifconfig -a | grep 'BROADCAST' | grep -v  'trunk'  | sed 's/^\(.*\)\: .*/\1/'`
-MAINIFACE=`cat $VARDIR/$IFACE`
+MAINIFACE=`cat $VAR_IFACE`
 
 TRUNKDEVS=`echo $IPDEVS | sed "s/^\(.*\)$MAINIFACE\(.*\)/\1\2/"`
 
@@ -44,7 +44,7 @@ while true; do
     9) $D --title "$TITLE" --checklist "$TRUNK" 15 50 9 $tag1 "$dev1" on $tag2 "$dev2" on $tag3 "$dev3" on $tag4 "$dev4" on $tag5 "$dev5" on \
        $tag6 "$dev6" on $tag7 "$dev7" on $tag8 "$dev8" on $tag9 "$dev9" on 2>/tmp/retdevtrunk;;
     *) if [ -z $TRUNKDEVS ]; then $D --title "$TITLE" --msgbox "$FAILTRUNKDEV" 15 50
-         echo "lo0" > $VARDIR/$TRUNKIFACES
+         echo "lo0" > $VAR_TRUNKIFACES
          else echo "Viga snorti liideste leidmisel"
        fi
        exit 1;;
@@ -74,7 +74,7 @@ while true; do
     LINE=$LINE$SEPAR$i
     SEPAR=" "
   done
-  echo "$LINE" > $VARDIR/$TRUNKIFACES
+  echo "$LINE" > $VAR_TRUNKIFACES
   rm -rf /tmp/$TRUNKIFACES
 
   exit 0

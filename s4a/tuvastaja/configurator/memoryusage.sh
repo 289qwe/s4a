@@ -12,13 +12,14 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-DEV=`cat $VAR_IFACE`
-IP=`cat $VAR_IP_ADDRESS`
-MASK=`cat $VAR_SUBNET_MASK`
+# Find out used memory
+TOTAL=`sysctl -n hw.physmem`
+FREE4KB=`vmstat -s | grep "pages free$" | sed -e 's/^ *\([0-9]*\).*/\1/g'`
+FREE=$(($FREE4KB * 4096))
+USED=$(($TOTAL - $FREE))
 
-NETHOST=/etc/hostname.$DEV
-
-# Set network interface 
-
-echo "inet $IP $MASK NONE description $MAINNET" > $NETHOST
-chmod 640 $NETHOST
+# For MRTG
+echo $USED
+echo $TOTAL
+echo 0
+echo memoryUsage

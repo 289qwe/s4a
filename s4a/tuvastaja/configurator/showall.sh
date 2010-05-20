@@ -16,27 +16,27 @@ fi
 # Show defined values
 
 echo "$SHOWALL" > /tmp/show.out
-echo "\n$ETH: `cat $VARDIR/$IFACE`" >> /tmp/show.out
-echo "$TRUNK: `cat $VARDIR/$TRUNKIFACES`" >> /tmp/show.out
-echo "$IP2: `cat $VARDIR/$IPADDR`" >> /tmp/show.out
-echo "$IP3: `cat $VARDIR/$SUBMASK`" >> /tmp/show.out
-echo "$IP4: `cat $VARDIR/$GATEWAY`" >> /tmp/show.out
-echo "$IP5: `cat $VARDIR/$HOSTNAME`" >> /tmp/show.out
-echo "$IP6: `cat $VARDIR/$DOMAIN`" >> /tmp/show.out
-echo "$IP7: `cat $VARDIR/$DNS`" >> /tmp/show.out
-echo "$EMAIL1: `cat $VARDIR/$ADMINMAIL`" >> /tmp/show.out
-echo "$EMAIL2: `cat $VARDIR/$SMTPADDR`" >> /tmp/show.out
-echo "$NTP: `cat $VARDIR/$NTPADDR`" >> /tmp/show.out
-echo "$SNMP: `cat $VARDIR/$SNMPADDR`" >> /tmp/show.out
-echo "$SNMPCOMMUNITY: `cat $VARDIR/$ROCOMMUNITY`" >> /tmp/show.out
-echo "$SYSLOG: `cat $VARDIR/$SYSLOGSERVER`" >> /tmp/show.out
-echo "$SNORT: `cat $VARDIR/$LOCALNETS`" >> /tmp/show.out
-echo "$CERT1: `cat $VARDIR/$SHORTNAME`" >> /tmp/show.out
-echo "$CERT2: `cat $VARDIR/$LONGNAME`" >> /tmp/show.out
-echo "$CERT3: `cat $VARDIR/$ORG`" >> /tmp/show.out
-echo "$CERT4: `cat $VARDIR/$CENTRAL`" >> /tmp/show.out
-echo "$CERT5: `cat $VARDIR/$SECONDCENTRAL`" >> /tmp/show.out
-echo "$VERSION: `cat $VARDIR/$SOFTVER`" >> /tmp/show.out
+echo "\n$ETH: `cat $VAR_IFACE`" >> /tmp/show.out
+echo "$TRUNK: `cat $VAR_TRUNKIFACES`" >> /tmp/show.out
+echo "$IP2: `cat $VAR_IP_ADDRESS`" >> /tmp/show.out
+echo "$IP3: `cat $VAR_SUBNET_MASK`" >> /tmp/show.out
+echo "$IP4: `cat $VAR_DEFAULT_GATEWAY`" >> /tmp/show.out
+echo "$IP5: `cat $VAR_HOSTNAME`" >> /tmp/show.out
+echo "$IP6: `cat $VAR_DOMAIN`" >> /tmp/show.out
+echo "$IP7: `cat $VAR_NAMESERVERS`" >> /tmp/show.out
+echo "$EMAIL1: `cat $VAR_ADMIN_EMAIL`" >> /tmp/show.out
+echo "$EMAIL2: `cat $VAR_SMTP`" >> /tmp/show.out
+echo "$NTP: `cat $VAR_NTP_SERVER`" >> /tmp/show.out
+echo "$SNMP: `cat $VAR_SNMP_SERVER`" >> /tmp/show.out
+#echo "$SNMPCOMMUNITY: `cat $VAR_RO_COMMUNITY`" >> /tmp/show.out
+echo "$SYSLOG: `cat $VAR_SYSLOGSERVER`" >> /tmp/show.out
+echo "$SNORT: `cat $VAR_LOCALNETS`" >> /tmp/show.out
+echo "$CERT1: `cat $VAR_SHORTNAME`" >> /tmp/show.out
+echo "$CERT2: `cat $VAR_FULLNAME`" >> /tmp/show.out
+echo "$CERT3: `cat $VAR_ORGANISATION`" >> /tmp/show.out
+echo "$CERT4: `cat $VAR_CENTRALSERVER`" >> /tmp/show.out
+echo "$CERT5: `cat $VAR_SECONDCENTRAL`" >> /tmp/show.out
+echo "$VERSION: `cat $VAR_SOFTWARE_VERSION`" >> /tmp/show.out
 echo "\n$SHOWINFO" >> /tmp/show.out
 
 $D --title "$TITLE" --textbox /tmp/show.out 40 100

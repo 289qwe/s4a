@@ -15,9 +15,8 @@ my $force = $ARGV[0];
 #TODO need eraldi .pm'i
 my $s4a_map = "/var/www/etc/s4a-map";
 my $sigdir = "/var/www/confserv/signatures";
-my $sigverfile = "current-";
+my $sigverfile = "current-rules";
 my $sigfile = "signatures-";
-my $verinfo = "4.6";
 
 
 if ((! -e "$s4a_map.old") || (! -e "$sigdir/oldcurrent.tgz")) {
@@ -38,7 +37,4 @@ move("$s4a_map.old", "$s4a_map") || die "Rename($s4a_map.old, $s4a_map) error: $
 
 my $now = time();
 move("$sigdir/oldcurrent.tgz", "$sigdir/$sigfile$now.tgz") || die "Copy($sigdir/oldcurrent.tgz, $sigdir/$sigfile$now.tgz): $!";
-writeCursigdate("$sigdir/$sigverfile$verinfo", $now);
-
-
-
+writeCursigdate("$sigdir/$sigverfile", $now);

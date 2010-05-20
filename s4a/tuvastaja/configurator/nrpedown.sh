@@ -9,4 +9,4 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-if_running nrpe _nrpe
+if_running nrpe

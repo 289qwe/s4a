@@ -68,6 +68,8 @@ if [ ! -s $VAR_LOCALNETS ]; then
   exit 0
 fi
 
+# From here on only with the good configuration
+
 # Copy config files
 if [ ! -s $SNORTDATA/conf/classification.config ]; then
   cp $CONFROOT/static/classification.config $SNORTDATA/conf/classification.config
@@ -90,8 +92,6 @@ fi
 if [ ! -s $SNORTDATA/conf/unicode.map ]; then
   cp $CONFROOT/static/unicode.map $SNORTDATA/conf/unicode.map
 fi
-
-# From here on only with the good configuration
 
 # Set localnets and then paste static variables-conf
 if [ -s $VAR_LOCALNETS ]; then
@@ -118,13 +118,11 @@ fi
 #Random number between 0 and 4
 let R=$RANDOM%5
 
-case "$R" in
-  "0") CRONTASK="0,5,10,15,20,25,30,35,40,45,50,55 * * * * $SNORTOMATIC" ;;
-  "1") CRONTASK="1,6,11,16,21,26,31,36,41,46,51,56 * * * * $SNORTOMATIC" ;;
-  "2") CRONTASK="2,7,12,17,22,27,32,37,42,47,52,57 * * * * $SNORTOMATIC" ;;
-  "3") CRONTASK="3,8,13,18,23,28,33,38,43,48,53,58 * * * * $SNORTOMATIC" ;;
-  "4") CRONTASK="4,9,14,19,24,29,34,39,44,49,54,59 * * * * $SNORTOMATIC" ;;
-esac
+for i in 0 1 2 3 4; do
+  if [ $i -eq $R ]; then
+    CRONTASK="$i-59/5 * * * * $SNORTOMATIC"
+  fi
+done
 
 # Create crontabs
 crontab -u _snort -l > $CRONSNORT

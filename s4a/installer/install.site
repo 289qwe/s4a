@@ -22,14 +22,16 @@ for i in $LIST; do
   pkg_add -x $i
 done
 
-
 # Make neccessary operations after install, before first login 
 export TERM=xterm-color
+cat /etc/rc.local | sed -e "s/^echo '.'$//g" > /tmp/rc.local
+mv /tmp/rc.local /etc/rc.local
 cat <<EOF >>/etc/rc.local
 if [ ! -f /root/.firstapache ]; then
   cd /var/www/tuvastaja/configurator
   sh postinstall.sh
 fi
+echo '.'
 EOF
 
 # Executing configuration.

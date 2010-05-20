@@ -18,22 +18,36 @@ while [ 0 ]; do
   ret=$?
   cancel_pressed $ret
 
-  if [ ! -s $VARDIR/$SNMPADDR ]; then
-    echo "127.0.0.1" > $VARDIR/$SNMPADDR
+  if [ ! -s $VAR_SNMP_SERVER ]; then
+    echo "127.0.0.1" > $VAR_SNMP_SERVER
   fi
 
   RETYESNO="`cat /tmp/retyesno`"
   case "$RETYESNO" in
-    "1") if [ ! -s $VARDIR/$SNMPADDR ]; then
-           echo "127.0.0.1" > $VARDIR/$SNMPADDR
+    "1") ask_value "$SNMPASK" "$SNMPADDR" "$IPEXP" "$FAILIP"
+         if [ $? -ne 0 ]; then
+           return 1
          fi
-         sh snmp.sh
-         rm -rf /tmp/retyesno
+         ret=0
+         error=$MAKEFAIL
+         verify_var "$VAR_SNMP_SERVER";
+         if [ $? -ne 0 ]; then
+           error="$error\n$VARNOTSET $SNMP"
+           ret=1
+         fi
+
+         if [ $ret -ne 0 ]; then
+           $D --title "$TITLE" --msgbox "$error" 15 80
+           unset error
+         else
+           make_conf monitoring
+         fi
+         rm -f /tmp/retyesno
          exit 0;;
-    "2") echo "127.0.0.1" > $VARDIR/$SNMPADDR 
-         echo "$NOSYSLOG" > $VARDIR/$ROCOMMUNITY
+    "2") echo "127.0.0.1" > $VAR_SNMP_SERVER 
+         #echo "$NOSYSLOG" > $VAR_RO_COMMUNITY
          make_conf monitoring
-         rm -rf /tmp/retyesno
+         rm -f /tmp/retyesno
          exit 0;;
   esac
 done

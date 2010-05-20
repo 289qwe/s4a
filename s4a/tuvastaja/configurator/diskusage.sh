@@ -12,13 +12,12 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-DEV=`cat $VAR_IFACE`
-IP=`cat $VAR_IP_ADDRESS`
-MASK=`cat $VAR_SUBNET_MASK`
+# Find out used memory
+ROOT=`df | grep /$ | awk '{printf("%s\n",$5);}' | sed -e 's/%//g'`
+DATA=`df | grep data$ | awk '{printf("%s\n",$5);}' | sed -e 's/%//g'`
 
-NETHOST=/etc/hostname.$DEV
-
-# Set network interface 
-
-echo "inet $IP $MASK NONE description $MAINNET" > $NETHOST
-chmod 640 $NETHOST
+# For MRTG
+echo $ROOT
+echo $DATA
+echo 0
+echo diskUsage

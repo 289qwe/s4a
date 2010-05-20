@@ -9,5 +9,4 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-if_running syslogd _syslogd
-sleep 1 
+if_running syslogd

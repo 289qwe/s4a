@@ -176,7 +176,7 @@ $memorydefs = array(
 	"COMMENT:Average  " ,
 	"COMMENT:    Min  " ,
 	"COMMENT:Current    \l" ,
-	"AREA:free#00cc00:Free " ,
+	"AREA:free#00cc00:Used " ,
 	"GPRINT:avgfree:%6.1lf %sB" ,
 	"GPRINT:maxfree:%6.1lf %sB" ,
 	"GPRINT:lastfree:%6.1lf %sB" ,

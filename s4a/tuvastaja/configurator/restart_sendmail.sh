@@ -15,6 +15,9 @@ fi
 
 HOST=`cat $VAR_HOSTNAME`
 
-if_running sendmail sendmail
-sendmail -L sm-mta -C/etc/mail/$HOST.cf -bd -q30m
+if_running sendmail
+
+if [ `cat $VAR_ADMIN_EMAIL` != "$NOSYSLOG" ]; then
+  sendmail -L sm-mta -C/etc/mail/$HOST.cf -bd -q30m
+fi
 

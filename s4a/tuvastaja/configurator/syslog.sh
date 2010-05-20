@@ -18,8 +18,8 @@ while [ 0 ]; do
   ret=$?
   cancel_pressed $ret
 
-  if [ ! -s $VARDIR/$SYSLOGSERVER ]; then
-    echo "$NOSYSLOG" > $VARDIR/$SYSLOGSERVER
+  if [ ! -s $VAR_SYSLOGSERVER ]; then
+    echo "$NOSYSLOG" > $VAR_SYSLOGSERVER
   fi
 
   RETYESNO="`cat /tmp/retyesno`"
@@ -44,7 +44,7 @@ while [ 0 ]; do
          fi
          rm -rf /tmp/retyesno
          exit 0;;
-    "2") echo "$NOSYSLOG" > $VARDIR/$SYSLOGSERVER
+    "2") echo "$NOSYSLOG" > $VAR_SYSLOGSERVER
          make_conf syslog
          rm -rf /tmp/retyesno
          exit 0;;

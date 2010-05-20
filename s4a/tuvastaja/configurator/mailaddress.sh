@@ -18,8 +18,8 @@ while [ 0 ]; do
   ret=$?
   cancel_pressed $ret
 
-  if [ ! -s $VARDIR/$ADMINMAIL ]; then
-    echo "$NOSYSLOG" > $VARDIR/$ADMINMAIL
+  if [ ! -s $VAR_ADMIN_EMAIL ]; then
+    echo "$NOSYSLOG" > $VAR_ADMIN_EMAIL
   fi
 
   RETYESNO="`cat /tmp/retyesno`"
@@ -27,10 +27,9 @@ while [ 0 ]; do
     "1") sh email.sh	
          rm -rf /tmp/retyesno
          exit 0;;
-    "2") echo "$NOSYSLOG" > $VARDIR/$ADMINMAIL
-         echo "127.0.0.1" > $VARDIR/$SMTPADDR
+    "2") echo "$NOSYSLOG" > $VAR_ADMIN_EMAIL
+         echo "127.0.0.1" > $VAR_SMTP
          make_conf email
-         pkill sendmail
          rm -rf /tmp/retyesno
          exit 0;;
   esac

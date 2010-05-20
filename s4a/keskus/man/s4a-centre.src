@@ -132,13 +132,15 @@ to s4ad to force logging, and turn on the \fBlocal3.debug\fP facility to log eve
 .D1 */5 * * * * /usr/local/bin/s4a-draw
 .Sh MANAGING DETECTORS
 To add new detectors to the central server database, run the command:
-.D1 Cm update_db \-f <certfile>
-Where <certfile> is an X.509 certificate with the following Distinguished Name fields set:
+.D1 Cm /var/www/database/update_db.php [-b] \-f <certarchive>
+Where <certarchive> is tar.gz-formatted archive that consists of <certfile> named tuvastaja.crt.
+<certfile> tuvastaja.crt must be an X.509 certificate with the following Distinguished Name fields set:
 .D1 countryName
 .D1 localityName
 .D1 organizationName
 .D1 organizationalUnitName
 .D1 commonName
+If '-b' option is set, then the certificate will be added without asking confirmation.
 .Sh MANAGING PATCHES
 The following steps must be carried out in another computer. 
 .Ss Preliminary steps

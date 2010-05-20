@@ -159,3 +159,6 @@ IP6ASK="$IP6\nkujul 'asutus.ee' või 'sisemine'"
 IP7ASK="$IP7\nkujul 192.168.1.1"
 SNMPASK="$SNMP\nkujul 192.168.1.1"
 SNMPCOMMUNITYASK="$SNMPCOMMUNITY\nnäiteks 'tuvastaja'"
+
+MAINNET="Haldus"
+MONITORNET="Monitor"

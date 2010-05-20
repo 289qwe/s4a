@@ -13,7 +13,17 @@ fi
 . $CONFROOT/functions.sh
 
 if [ ! -s $VAR_SMTP ]; then
-  exit 0
+  echo "127.0.0.1" > $VAR_SMTP
+fi
+
+if [ ! -f $VAR_HOSTNAME ]; then
+  $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50 
+  exit 1
+fi
+
+if [ ! -f $VAR_DOMAIN ]; then
+  $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50
+  exit 1
 fi
 
 SMTPHOST=`cat $VAR_SMTP`

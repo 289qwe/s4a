@@ -12,6 +12,12 @@ require_once 'statview_common.inc';
 
 error_reporting(E_ALL);
 
+
+$preproc = "";
+if (isset($_GET['preproc'])) {
+	$preproc = "checked";
+} 
+
 $threshold = isset($_GET['threshold']) && is_numeric($_GET['threshold']) ? $_GET['threshold'] : 0;
 $line_count = isset($_GET['count']) && is_numeric($_GET['count']) ? $_GET['count'] : 25;
 $page_type = isset($_GET['type']) && is_numeric($_GET['type']) ? $_GET['type'] : 0;
@@ -59,10 +65,6 @@ switch ($page_type) {
 		// Show sources of specific signature
 		generate_one_sig($sig);
 		break;
-	case 5:
-		// Show log file filtered by signature, source address and/or destination address
-		generate_alert_grep();
-		break;
 	default:
 		break;
 }
@@ -106,19 +108,19 @@ function print_form()
 <input type="hidden" name="md" value="<?php print $GLOBALS['day_dir']?>" />
 <input type="hidden" name="sig" value="<?php print $GLOBALS['sig']?>" />
 <label>
+<input id="id_preproc" class="input-text" type="checkbox" name="preproc" value="preproc" <?php print $GLOBALS['preproc'] ?> />
+<span class="right">Kuva preprotsessorid:</span>
+</label>
+<label>
 <input id="id_count" class="input-text" type="text" name="count" value="<?php print $GLOBALS['line_count']?>" size="4"/>
 <span class="right">Top:</span>
 </label>
-<?php
-	if ($GLOBALS['page_type'] != 5) {
-?>
 <label>
 <input id="id_threshold" class="input-text" type="text" name="threshold" value="<?php print $GLOBALS['threshold']?>" size="4"/>
 <span class="right">L&auml;vend:</span>
 </label>
 <?php
-	}
-	if ($GLOBALS['page_type'] == 0 || $GLOBALS['page_type'] == 5) {			# Filter is only available to certain queries
+	if ($GLOBALS['page_type'] == 0) {			# Filter is only available to certain queries
 ?>
 <label>
 <span class="left">L&auml;hteaadress:</span>
@@ -224,7 +226,6 @@ function generate_one_sig_($sig, $signame, $caption, $database, $type) {
 			break;
 		}
 
-#		$alr_url = sprintf("%s&%s=%s&sig=%s", prepare_url(5), $type, $src_dst, $sig);
 		$url = sprintf("%s&%s=%s", prepare_url(0), $type, $src_dst);
 ?>
 <tr class="s4a">
@@ -270,6 +271,13 @@ if ($css) {
 	$data = db_read_into_array_and_sort($dbh);
 	$count = 0;
 	foreach($data as $key => $alerts) {
+		if ($type == "sig" && $GLOBALS['preproc'] != "checked") {
+			$keyparts = explode(":", $key);
+			if ($keyparts[0] != 1) {
+				continue;
+			}
+		}
+
 		if ($alerts < $GLOBALS['threshold']) {
 			continue;
 		}
@@ -279,7 +287,6 @@ if ($css) {
 			break;
 		}
 		$percent = sprintf("%.2f", ($alerts/dbfetch('TOTAL', $dbhh)) * 100);
-#		$alr_url = sprintf("%s&%s=%s", prepare_url(5), $type, $key);
 		$url = sprintf("%s&%s=%s", prepare_url($type == "sig" ? 4 : 0), $type, $key);
 		$href = ($type == "sig") ? dbfetch($key, $db7h) : $key;
 ?>
@@ -308,49 +315,6 @@ if ($css) {
 	}
 }
 
-function generate_alert_grep() {
-?>
-<h3 class="s4a">Alertide v&auml;ljav&otilde;te</h3>
-
-<?php
-	$run_limit = ini_get('max_execution_time') - 5;
-	$logh = logopen("alert.fast");
-
-	if (!$logh) {
-		print_error();
-		return;
-	}
-?>
-<pre>
-<?php
-
-	$count = 0;
-	$start_time = time();
-	while ($line = fgets($logh)) {
-		// Break after exceeding the time limit of script run
-		if (time() - $start_time > $run_limit) {
-?>
-P&auml;ringu t&ouml;&ouml;tlemine katkestati, kuna see kestis &uuml;le lubatud aja <?php print $run_limit?> sekundit. Logiridade n&auml;gemiseks laienda palun otsingut, v&auml;henda ridade arvu limiiti v&otilde;i kasuta muid vahendeid (n&auml;iteks grep)
-<?php
-			break;
-		}
-		if (!empty($GLOBALS['sig']) && strpos($line, sprintf("[%s", $GLOBALS['sig'])) == 0 ||
-				!empty($GLOBALS['src']) && strpos($line, sprintf("} %s", $GLOBALS['src'])) == 0 ||
-				!empty($GLOBALS['dst']) && strpos($line, sprintf("> %s", $GLOBALS['dst'])) == 0) {
-			continue;
-		}
-		$count++;
-		// Break after exceeding line count limit
-		if ($GLOBALS['line_count'] > 0 && $count > $GLOBALS['line_count']) {
-			break;
-		}
-		echo $line;
-	}
-?>
-</pre>
-<?php
-}
-
 function generate_all_sig_src_dst() {
 
 	$db0h = dbopen("s0");
@@ -371,6 +335,16 @@ function generate_all_sig_src_dst() {
 	$data = db_read_into_array_and_sort($db0h);
 	$count = 0;
 	foreach ($data as $key => $alerts) {
+
+		if ($GLOBALS['preproc'] != "checked") {
+			$keyparts1 = explode(",", $key);
+			$keyparts = explode(":", $keyparts1[2]);
+			if ($keyparts[0] != 1) {
+				continue;
+			}
+		}
+
+
 		if ($alerts < $GLOBALS['threshold']) {
 			continue;
 		}
@@ -396,7 +370,6 @@ function generate_all_sig_src_dst() {
 		$src_url = prepare_url(0) . "&src=" . $src;
 		$dst_url = prepare_url(0) . "&dst=" . $dst;
 		$sig_url = prepare_url(0) . "&sig=" . $sig;
-#		$alr_url = prepare_url(5) . "&sig=" . $sig . "&src=" . $src . "&dst=" . $dst;
 ?>
 <tr class="s4a">
 <td class="s4a s4a-jrk"><?php print $count?></td>
@@ -497,8 +470,14 @@ function prepare_dl_line($name, $variable, $handler, $url = "")
 
 function prepare_url($type)
 {
-	return sprintf("%s?type=%d&count=%d&threshold=%d&yy=%s&md=%s", 
+
+	$tmp_url = sprintf("%s?type=%d&count=%d&threshold=%d&yy=%s&md=%s", 
 			$_SERVER['PHP_SELF'], $type, $GLOBALS['line_count'], $GLOBALS['threshold'], $GLOBALS['year_dir'], $GLOBALS['day_dir']);
+
+	if ($GLOBALS['preproc'] == "checked") {
+		$tmp_url .= "&preproc=preproc";
+	}
+	return $tmp_url;
 }
 
 function print_error() {

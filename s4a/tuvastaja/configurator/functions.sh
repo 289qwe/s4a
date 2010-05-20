@@ -22,7 +22,7 @@ ask=1
 
 # regexp's
 IPEXP="^[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}$"
-TEXTEXP="^[a-zA-Z0-9_]*$"
+TEXTEXP="^[a-zA-Z0-9_-]*$"
 DOMAINEXP="^[a-zA-Z0-9\.-]*$"
 EMAILEXP="^.*@.*$"
 ANYEXP="^[a-zA-Z0-9_\.-]*$"
@@ -135,13 +135,10 @@ create_user ()
 if_running ()
 {
   PROC=$1
-  GREP=$2
-  ps axu > /tmp/$PROC
-  if grep -q -R "$GREP" /tmp/$PROC; then
+  if pgrep "$PROC" > /dev/null; then
     pkill $PROC
-    sleep 2 
+    sleep 2
   fi
-  rm -rf /tmp/$PROC
 }
 
 # Verify if required variable exists
@@ -176,7 +173,6 @@ kill_all_and_umount_data ()
   cd $CONFROOT
   apachectl stop >/dev/null 2>&1
   pkill nrpe
-  pkill snmpd
   pkill syslogd
   pkill pflogd
   pkill mrtg
@@ -281,11 +277,11 @@ check_end ()
     error="$error\n$VARNOTSET $SNMP"
     ret=1
   fi
-  verify_var "$VAR_RO_COMMUNITY"
-  if [ $? -ne 0 ]; then
-    error="$error\n$VARNOTSET $SNMPCOMMUNITY"
-    ret=1
-  fi
+  #verify_var "$VAR_RO_COMMUNITY"
+  #if [ $? -ne 0 ]; then
+    #error="$error\n$VARNOTSET $SNMPCOMMUNITY"
+    #ret=1
+  #fi
   verify_var "$VAR_SHORTNAME"
   if [ $? -ne 0 ]; then
     errorwarn="$errorwarn\n$VARNOTSET $CERT1"
@@ -350,7 +346,15 @@ check_end ()
 mount_usb ()
 {
   make_dir $MOUNTDIR
-  for i in `sysctl -n hw.disknames | sed 's/,/ /g'`; do
+  ALLDEVS=`sysctl -n hw.disknames | sed 's/,/ /g'`
+  DEVS="$ALLDEVS"
+  for i in $ALLDEVS; do
+    if echo $i | grep -q "^cd" || echo $i | grep -q "^fd"; then
+    DEVS=`echo $DEVS | sed "s/\(.*\)$i\(.*\)/\1\2/"`
+    fi
+  done
+
+  for i in $DEVS; do
     mount /dev/"$i"i $MOUNTDIR 2>/dev/null
     if [ $? -ne 0 ]; then
       fail=1
@@ -398,4 +402,15 @@ crypt ()
     "*") echo "expecting options e or d"
          return 1;;
   esac
+}
+
+# Function for network counters
+traffic ()
+{
+  INTERFACE="$1"
+  NETSTATCMD=`netstat -ibn | grep $INTERFACE | grep Link`
+  echo $NETSTATCMD | awk '{printf("%s\n",$5);}'
+  echo $NETSTATCMD | awk '{printf("%s\n",$6);}'
+  echo 0
+  echo Interface $INTERFACE
 }

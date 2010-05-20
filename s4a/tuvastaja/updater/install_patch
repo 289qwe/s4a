@@ -42,7 +42,7 @@ CURLOPTS="-f -s -S -m $TIMEOUT --stderr -"
 # figure out where to put the pid file
 MYPID="$STATUSDIR/install_patch.pid"
 
-if [ `expr "$NEWVER" - "$PATCHLEVEL"` -ne "1" ]; then
+if [ $(($NEWVER - $PATCHLEVEL)) -ne "1" ]; then
   # vale paik, lahkume
   rm -f "$FLAGFILE"
   exit 0
@@ -217,16 +217,15 @@ fi
 
 # paigaldame paki
 PACKAGES=`cat $PATCHDIR/patchtmp/spatch.lst`
-for PACKAGE in "$PACKAGES"; do
-	pkg_info -C "$PATCHDIR/patchtmp/$PACKAGE" >/tmp/pkginfo 2>&1
+for PACKAGE in $PACKAGES; do
 	# kontrollime kas on signeeritud pakk
-	if grep -R "Certificate info:" /tmp/pkginfo; then
+	if pkg_info -C $PATCHDIR/patchtmp/$PACKAGE | grep -q -R "Certificate info:"; then
 		# testime installimist
-		pkg_add -nrqq -F update "$PATCHDIR/patchtmp/$PACKAGE" >/tmp/pkgadd 2>&1
+		pkg_add -nrqq -F update $PATCHDIR/patchtmp/$PACKAGE >/tmp/pkgadd 2>&1
 	        ret=$?
 		# kui korras, siis installime
 		if [ "$ret" -eq "0" ]; then
-			pkg_add -rqq -F update "$PATCHDIR/patchtmp/$PACKAGE"
+			pkg_add -rqq -F update $PATCHDIR/patchtmp/$PACKAGE
 		else 
 			$LOGGER "Problem installing patch (pkg_add error). System may be in inconsistent state!"
 			$LOGGER "`cat /tmp/pkgadd`"
@@ -242,7 +241,6 @@ rm -f $PATCHFILE
 rm "$FLAGFILE"
 cd /
 rm -rf "$PATCHDIR"
-rm -f /tmp/pkginfo
 rm -f /tmp/pkgadd
 
 # Kui mõnel pakil certi pole või pakk ei installu, siis väljume siin.

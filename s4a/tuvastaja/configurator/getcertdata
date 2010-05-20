@@ -104,7 +104,7 @@ sub parse_certificate {
     my %result;
 
     foreach my $line (split(/[\r\n]+/, $text)) {
-	# syb. rida on: subject= /C=EE/O=TestOrganisatsioon/OU=Mingi asutus/CN=demo2/L=s4akeskus-conf.cyber.ee
+	# syb. rida on: subject= /C=EE/O=TestOrganisatsioon/OU=Mingi asutus/CN=demo2/L=keskserver-conf.asutus.ee
 	if ($line =~ /^subject=(.*$)/ ){
 		foreach my $part (split('/', $1)) {
 			if ($part =~ /^O=(.*)$/ ){

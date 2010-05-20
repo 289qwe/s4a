@@ -369,10 +369,12 @@ tuvastaja/configurator/backup.sh
 tuvastaja/configurator/certreq.sh
 tuvastaja/configurator/certrestore.sh
 tuvastaja/configurator/configmenu.sh
+tuvastaja/configurator/cpuusage.sh
 tuvastaja/configurator/destroy.sh
 tuvastaja/configurator/devip.sh
 tuvastaja/configurator/devtrunk.sh
 tuvastaja/configurator/disk-cleanup.pl
+tuvastaja/configurator/diskusage.sh
 tuvastaja/configurator/email.sh
 tuvastaja/configurator/functions.sh
 tuvastaja/configurator/getcertdata
@@ -380,8 +382,10 @@ tuvastaja/configurator/ifdown.sh
 tuvastaja/configurator/ip.sh
 tuvastaja/configurator/keycert.sh
 tuvastaja/configurator/mailaddress.sh
+tuvastaja/configurator/memoryusage.sh
 tuvastaja/configurator/menu.sh
 tuvastaja/configurator/monitoring.sh
+tuvastaja/configurator/netstat.sh
 tuvastaja/configurator/nrpedown.sh
 tuvastaja/configurator/ntp.sh
 tuvastaja/configurator/ntpdown.sh
@@ -407,7 +411,6 @@ tuvastaja/configurator/script/gen_pfconf
 tuvastaja/configurator/script/gen_resolv
 tuvastaja/configurator/script/gen_rootmail
 tuvastaja/configurator/script/gen_smtp
-tuvastaja/configurator/script/gen_snmp
 tuvastaja/configurator/script/gen_snort
 tuvastaja/configurator/script/gen_softver
 tuvastaja/configurator/script/gen_staticconf
@@ -418,8 +421,6 @@ tuvastaja/configurator/script/install_chroot
 tuvastaja/configurator/secondcentral.sh
 tuvastaja/configurator/showall.sh
 tuvastaja/configurator/showsettings.sh
-tuvastaja/configurator/snmp.sh
-tuvastaja/configurator/snmpdown.sh
 tuvastaja/configurator/snort.sh
 tuvastaja/configurator/static/
 tuvastaja/configurator/static/.profile
@@ -431,16 +432,13 @@ tuvastaja/configurator/static/httpd.conf
 tuvastaja/configurator/static/index.html
 tuvastaja/configurator/static/libraries.conf
 tuvastaja/configurator/static/motd
-tuvastaja/configurator/static/mrtg.cfg
 tuvastaja/configurator/static/newsyslog.conf
 tuvastaja/configurator/static/nrpe.cfg
-tuvastaja/configurator/static/nrpe.local.cfg
 tuvastaja/configurator/static/plugins.conf
 tuvastaja/configurator/static/preprocessors.conf
 tuvastaja/configurator/static/reference.config
 tuvastaja/configurator/static/sendmail_begin
 tuvastaja/configurator/static/sendmail_end
-tuvastaja/configurator/static/snmpd.conf
 tuvastaja/configurator/static/sshd_config
 tuvastaja/configurator/static/statements.conf
 tuvastaja/configurator/static/syslog.conf
@@ -449,6 +447,8 @@ tuvastaja/configurator/static/variables.conf
 tuvastaja/configurator/syslog.sh
 tuvastaja/configurator/syslogdown.sh
 tuvastaja/configurator/updates/
+tuvastaja/configurator/updates/4.6.10-install.sh
+tuvastaja/configurator/updates/4.6.10.sh
 tuvastaja/configurator/updates/4.6.9.sh
 tuvastaja/configurator/values.sh
 tuvastaja/configurator/variables.sh
@@ -468,12 +468,9 @@ tuvastaja/nrpe/check_file_age
 tuvastaja/nrpe/check_rrd.pl
 tuvastaja/nrpe/runall.sh
 tuvastaja/snort/
-tuvastaja/snort/conf/
 tuvastaja/snort/create-sidmap.pl
 tuvastaja/snort/gen-msg.map
 tuvastaja/snort/genrulesconf.sh
-tuvastaja/snort/localconf/
-tuvastaja/snort/sid/
 tuvastaja/snort/snort.conf
 tuvastaja/snort/snortomatic
 tuvastaja/snort/start-stop-snort
@@ -483,12 +480,11 @@ tuvastaja/snort/statmail
 tuvastaja/snort/stats/
 @owner
 @group
-tuvastaja/snort/statview
-tuvastaja/snort/userdef/
 tuvastaja/updater/
 tuvastaja/updater/Pidfile.pm
 tuvastaja/updater/install_patch
 tuvastaja/updater/install_sig
 tuvastaja/updater/sighelper.pm
 tuvastaja/updater/status/
-@exec-update sh ${PREFIX}/tuvastaja/configurator/updates/4.6.9.sh
+@exec sh ${PREFIX}/tuvastaja/configurator/updates/4.6.10-install.sh
+@exec-update sh ${PREFIX}/tuvastaja/configurator/updates/4.6.10.sh

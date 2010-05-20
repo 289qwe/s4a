@@ -37,6 +37,7 @@ my $waldofile = $gdbm_root . "/waldo";
 my $waldo = 0;
 my $rrd_dir = $gdbm_root . "/rrd";
 my $dir_snort_logs = $dir_tuvastaja_data . "/snort-logs";
+my $dir_snort_sigs = $dir_tuvastaja_data . "/snort";
 my $pidfile = $dir_snort_logs . "/snortomatic.pid";
 my $inputfile = $dir_snort_logs . "/alert.fast";
 my $begintime = Time::ParseDate::parsedate('now - 6 minutes');
@@ -82,6 +83,8 @@ $centralheader{'INTIP'} = 0;
 $centralheader{'EXTIP'} = 0;
 $centralheader{'ACTIVEIP'} = 0;
 $centralheader{'BADRATIO'} = 0;
+
+my %seen_matchers = ();
 
 my %s0 = ();
 my %s1 = ();
@@ -315,12 +318,11 @@ sub print_stats {
 	$centralheader{'ACTIVEIP'} = $globalstats{'activeip'};
 
 	$globalstats{'badratio'} = 0;
+	$centralheader{'BADRATIO'} = 0;
 	if ($globalstats{'activeip'} > 0) {
 		$globalstats{'badratio'} = ($globalstats{'intip'}/$globalstats{'activeip'}) * 100;
+		$centralheader{'badratio'} = ($centralheader{'INTIP'}/$globalstats{'activeip'}) * 100;
 	}
-
-	$centralheader{'BADRATIO'} = $globalstats{'badratio'};
-	$centralheader{'EXTIP'} = $globalstats{'extip'};
 
 	syslog(LOG_DEBUG, "(alerts, signatures, sources, destinations, internal ip's, external ip's, active ip's): 
 				($globalstats{'alerts'}, $globalstats{'sigs'}, $globalstats{'srcip'}, 
@@ -445,7 +447,7 @@ sub send_rrd {
 	}
 
 	my $patchlevel = readCursigdate("$dir_status/patchlevel");
-	my $siglevel = readCursigdate("$dir_snort_logs/siglevel");
+	my $siglevel = readCursigdate("$dir_snort_sigs/siglevel");
 
 	my $tmpreq = prepare_rrd_request($patchlevel, $siglevel, $send_type);
 	my $ccname = readvar("Centralserver.var");
@@ -503,7 +505,7 @@ sub send_rrd {
 		return;
 	}
 
-	# paneme kirja et uuendus Ãµnnestus
+	# paneme kirja et uuendus õnnestus
 	writeCursigdate("$dir_status/updater-last-run", time());
 	if (-f $errespfile) {
 		unlink($errespfile);
@@ -854,6 +856,28 @@ sub process_data() {
 	$s7{"$self->{SID}"} = $self->{SIG};
 
 	my $key = $self->{SID};
+
+	if ($key =~ m/^1\:\d+$/) {
+		if (! exists $seen_matchers{"$self->{SADDR}"}) {
+			$seen_matchers{"$self->{SADDR}"}++;
+			if (Net::CIDR::cidrlookup($self->{SADDR}, @cidrlist)) {
+				$centralheader{'INTIP'}++;
+			}
+			else {
+				$centralheader{'EXTIP'}++;
+			}
+		}
+
+		if (! exists $seen_matchers{"$self->{DADDR}"}) {
+			$seen_matchers{"$self->{DADDR}"}++;
+			if (Net::CIDR::cidrlookup($self->{DADDR}, @cidrlist)) {
+				$centralheader{'INTIP'}++;
+			}
+			else {
+				$centralheader{'EXTIP'}++;
+			}
+		}
+	}
 
 	if (! exists $rrdstats{$key}) {
 		$rrdstats{$key} = { 'alerts' => 0, 'intip' => 0, 'extip' => 0, 'srcdst' => 0};
