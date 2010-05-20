@@ -6,32 +6,50 @@
  * */
 
 $dbname = "/var/www/database/s4aconf.db";
+$certfile = "tuvastaja.crt";
 
-$options = getopt("f:");
+$options = getopt("bf:");
 if (!array_key_exists("f", $options)) {
 	usage();
 	exit(1);
 }
 
-$certfile = $options["f"];
-if (!is_string($certfile)) {
+$tarball = $options["f"];
+if (!is_string($tarball)) {
+	usage();
+	exit(1);
+}
+
+if ((!is_file($tarball)) || (!is_readable($tarball))) {
+	usage();
+	exit(1);
+}
+
+$untar = sprintf("tar -zxvf %s %s", $tarball, $certfile);
+
+$retval = execute($untar, $response);
+if ($retval) {
+	print "\nToo many errors untarring archive, cannot continue\n";
 	usage();
 	exit(1);
 }
 
 if ((!is_file($certfile)) || (!is_readable($certfile))) {
 	usage();
+	clean($certfile);
 	exit(1);
 }
 
 if ((!is_file($dbname)) || (!is_readable($dbname)) || (!is_writeable($dbname))) {
 	print "Error opening $dbname for reading/writing\n";
+	clean($certfile);
 	exit(1);
 }
 
 $dbcopy = "$dbname." . date("YmdHi");
 if (!copy($dbname, $dbcopy)) {
 	print "Error making backup copy of the database\n";
+	clean($certfile);
 	exit(1);
 }
 
@@ -43,11 +61,13 @@ $cmd = sprintf("openssl x509 -in %s  -subject -nameopt multiline -dates -serial 
 $retval = execute($cmd, $response);
 if ($retval) {
 	print "\nToo many errors, cannot continue\n";
+	clean($certfile);
 	exit(1);
 }
 
 if (count($response) != 9) {
 	usage();
+	clean($certfile);
 	exit(1);
 }
 	
@@ -67,6 +87,7 @@ $serial = $tmp[1];
 if (empty($orgName) || empty($fullName) || empty($shortName) || 
 	empty($notBef) || empty($notAft) || empty($serial)) {
 	usage();
+	clean($certfile);
 	exit(1);
 }
 
@@ -77,10 +98,29 @@ print "Organization: $orgName\n";
 print "Detector: $shortName ($fullName)\n";
 print "Certificate: $serial\n";
 
+$continue = "false";
+if (!array_key_exists("b", $options)) {
+	print "Proceed to continue? (y/n): ";
+	$userinput = rtrim(fgets( STDIN ));
+	if ($userinput == "y") {
+		$continue = "true";
+	} 
+}
+else {
+	$continue = "true";
+}
+
+if ($continue == "false") {
+	print "Cancelled by the $user\n";
+	clean($certfile);
+	exit(1);
+}
+
 
 $pdo = new PDO("sqlite:$dbname"); 
 if (!$pdo) {
 	print "Error opening database $dbname\n";
+	clean($certfile);
 	exit(1);
 }
 
@@ -110,16 +150,24 @@ catch (PDOException $e) {
 }
 	
 unset($pdo);
+clean($certfile);
 
 function usage() {
-	print "Usage: update_db -f <certfile>\n";
-	print "\t<certfile> must contain X509 certificate\n";
+	print "Usage: update_db [-b] -f <certarchive>\n";
+	print "\t<certarchive> must be tar.gz-formatted archive\n";
+	print "\t<certarchive> must contain file named 'tuvastaja.crt' which is X509 certificate\n";
 	print "\tFollowing distinguished name components must be set:\n";
 	print "\t\tcountryName\n";
 	print "\t\tlocalityName\n";
 	print "\t\torganizationName\n";
 	print "\t\torganizationalUnitName\n";
 	print "\t\tcommonName\n";
+	print "If '-b' option is set, then certificate will be added without asking confirmation\n";
+	print "Example: update_db -b -f <certarchive>\n";
+}
+
+function clean($file) {
+	system("rm -f $file");
 }
 
 function updateDetectorCertificates($pdo, $notBef, $notAft, $serial, $det_sid, $user) {

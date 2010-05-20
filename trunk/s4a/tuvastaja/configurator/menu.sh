@@ -9,7 +9,8 @@
 #TESTVAR=/root/SVN/trunk/configurator/var
 
 CONFROOT=/var/www/tuvastaja/configurator
-VARDIR=/var/www/tuvastaja/data/conf
+DATADIR=/var/www/tuvastaja/data
+VARDIR=$DATADIR/conf
 
 if [ -n "$TESTROOT" ];
   then CONFROOT=$TESTROOT
@@ -28,6 +29,16 @@ make_dir $VARDIR
 
 #ctrl+c? dream on.
 trap "" 2
+
+if [ ! -d $DATADIR/apache ]; then
+  sh $CONFROOT/script/gen_staticconf
+fi
+if [ ! -d $DATADIR/rrd ]; then
+  cd $CONFROOT
+  make first
+  sh script/gen_syslog
+  touch /root/.firstapache /root/.firstboot
+fi
 
 mmenu=1
 while [ 0 ]; do

@@ -18,7 +18,7 @@ VAR_ADMIN_EMAIL=$(VARDIR)/Admin_Email.var
 VAR_SMTP=$(VARDIR)/SMTP.var 
 VAR_NTP_SERVER=$(VARDIR)/NTP_server.var 
 VAR_SNMP_SERVER=$(VARDIR)/SNMP_server.var 
-VAR_RO_COMMUNITY=$(VARDIR)/Ro_community.var
+#VAR_RO_COMMUNITY=$(VARDIR)/Ro_community.var
 VAR_LOCALNETS=$(VARDIR)/Localnets.var 
 VAR_TRUNKIFACES=$(VARDIR)/Trunkifaces.var 
 VAR_SYSLOGSERVER=$(VARDIR)/Syslogserver.var 
@@ -28,7 +28,7 @@ ROOTMAIL = /etc/mail/aliases
 PATCHLEVEL = /var/www/tuvastaja/updater/status/patchlevel
 
 VARIABLES = $(VAR_IFACE) $(VAR_IP_ADDRESS) $(VAR_SUBNET_MASK) $(VAR_DEFAULT_GATEWAY) $(VAR_HOSTNAME) \
-	$(VAR_DOMAIN) $(VAR_NAMESERVERS) $(VAR_ADMIN_EMAIL) $(VAR_SMTP) $(VAR_NTP_SERVER) $(VAR_RO_COMMUNITY) \
+	$(VAR_DOMAIN) $(VAR_NAMESERVERS) $(VAR_ADMIN_EMAIL) $(VAR_SMTP) $(VAR_NTP_SERVER) \
 	$(VAR_SNMP_SERVER) $(VAR_LOCALNETS) $(VAR_TRUNKIFACES) $(VAR_SYSLOGSERVER)
 
 TARGETS = preboot net email ntp snort monitoring syslog postinst postupd version
@@ -80,12 +80,7 @@ nrpe: $(VAR_SNMP_SERVER)
 	sh script/gen_nrpe
 	/usr/local/sbin/nrpe -c /etc/nrpe.cfg -d
 
-snmp: $(VAR_SNMP_SERVER) $(VAR_RO_COMMUNITY)
-	sh snmpdown.sh
-	sh script/gen_snmp
-	/usr/local/sbin/snmpd
-
-monitoring: nrpe snmp
+monitoring: nrpe
 	sh script/gen_pfconf
 
 syslog: snort $(VAR_SYSLOGSERVER)
@@ -94,7 +89,7 @@ syslog: snort $(VAR_SYSLOGSERVER)
 	syslogd -a /var/www/dev/log -a /var/empty/dev/log
 
 $(PATCHLEVEL):
-	echo 9 > $(PATCHLEVEL)
+	echo 0 > $(PATCHLEVEL)
 
 $(VAR_SOFTWARE_VERSION): $(PATCHLEVEL)
 	sh script/gen_softver
@@ -102,7 +97,6 @@ $(VAR_SOFTWARE_VERSION): $(PATCHLEVEL)
 version: $(VAR_SOFTWARE_VERSION)
 
 first:
-	sh script/gen_staticconf
 	sh script/gen_mrtg
 	sh script/gen_updatercron
 	sh script/gen_motd
@@ -111,12 +105,13 @@ initial:
 	sh script/gen_snort
 	sh script/gen_nrpe
 	/usr/local/sbin/nrpe -c /etc/nrpe.cfg -d
-	sh script/gen_snmp
-	/usr/local/sbin/snmpd
 	sh script/gen_pfconf
 	sh syslogdown.sh
 	sh script/gen_syslog
 	syslogd -a /var/www/dev/log -a /var/empty/dev/log
+	sh script/gen_rootmail
+	sh script/gen_smtp
+	sh restart_sendmail.sh
 
 postinst: first http initial
 

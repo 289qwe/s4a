@@ -16,8 +16,8 @@ fi
 DD="512"
 DISK=`sysctl -n hw.disknames | sed 's/^.*\([sw]d0\).*/\1/'`
 SECTORS=`disklabel $DISK | grep "^total sectors:" | sed 's/[a-z: ]*\([0-9]*\)/\1/'`
-BS=`expr 512 \* $DD`
-COUNT=`expr $SECTORS \/ $DD`
+BS=$((512 * $DD))
+COUNT=$(($SECTORS / $DD))
 
 while [ 0 ]; do
   echo "$EMPTY"

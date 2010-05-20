@@ -310,12 +310,11 @@ sub get_current($)
 	my $ret = 0;
 
 	my $sigdir = "/var/www/confserv/signatures";
-	my $sigverfile = "current-";
+	my $sigverfile = "current-rules";
 	my $sigfile = "signatures-";
-	my $verinfo = "4.6";
 
 	if( -d "$sigdir" ) {
-		my $curverfile = "$sigdir/$sigverfile$verinfo";
+		my $curverfile = "$sigdir/$sigverfile";
 		my $curver = readCursigdate($curverfile);
 		if ($curver == 0) {
 			# normal situation - no current

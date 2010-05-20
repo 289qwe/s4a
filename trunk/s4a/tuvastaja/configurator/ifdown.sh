@@ -14,7 +14,7 @@ fi
 . $CONFROOT/functions.sh
 
 # Check if network is up or not
-LINK=`cat $VARDIR/$IFACE`
+LINK=`cat $VAR_IFACE`
 
 CONFIG=/tmp/ifconfig
 ifconfig -a > $CONFIG

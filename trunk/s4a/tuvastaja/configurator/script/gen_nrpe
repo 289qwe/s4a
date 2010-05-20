@@ -18,18 +18,28 @@ fi
 SNMP=`cat $VAR_SNMP_SERVER`
 
 if [ ! -f $VAR_CENTRALSERVER ]; then
-  echo "www.cert.ee" > $VAR_CENTRALSERVER
+  CONFSERVER=""
+else
+  CONFSERVER=`cat $VAR_CENTRALSERVER`
 fi
-CONFSERVER=`cat $VAR_CENTRALSERVER`
+
+if [ ! -f $VAR_HOSTNAME ]; then
+  $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50 
+  exit 1
+fi
+
+if [ ! -f $VAR_DOMAIN ]; then
+  $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50
+  exit 1
+fi
+
+HOST=`cat $VAR_HOSTNAME`
+DOM=`cat $VAR_DOMAIN`
+FQDN="$HOST.$DOM"
 NRPECFG=/etc/nrpe.local.cfg
 
 # Setting up static nrpe.cfg
 cp $CONFROOT/static/nrpe.cfg /etc/nrpe.cfg
-
-# Setting up default $NRPECFG
-if [ ! -s $NRPECFG ]; then
-  cp $CONFROOT/static/nrpe.local.cfg $NRPECFG
-fi
 
 # Default $NRPECFG consists of line: allowed_hosts=127.0.0.1.
 if [ -n "$SNMP" ]; then
@@ -45,14 +55,17 @@ fi
 if [ -n "$CONFSERVER" ]; then
   echo "command[check_dns]=/usr/local/libexec/nagios/check_dns  -H $CONFSERVER" >> $NRPECFG
 else
-  echo "command[check_dns]=/usr/local/libexec/nagios/check_dns  -H www.cert.ee" >> $NRPECFG
+  echo "command[check_dns]=/usr/local/libexec/nagios/check_dns  -H $FQDN" >> $NRPECFG
 fi
 
 # Create user if it doesn't exist
 create_daemon_user _nrpe 556
 
 if ! grep -q -R "nrped" /etc/rc.local; then
+  cat /etc/rc.local | sed -e "s/^echo '.'$//g" > /tmp/rc.local
+  mv /tmp/rc.local /etc/rc.local
   echo "if [ -x /usr/local/sbin/nrpe ]; then" >> /etc/rc.local
   echo "        echo -n ' nrped';       /usr/local/sbin/nrpe -d -c /etc/nrpe.cfg" >> /etc/rc.local
   echo "fi" >> /etc/rc.local
+  echo "echo '.'" >> /etc/rc.local
 fi

@@ -25,7 +25,7 @@ make_dir $HTTPROOT/php5
 
 # Setting up static httpd.conf
 if ! grep -q -R "conf/s4a/" $HTTPROOT/httpd.conf; then
-  cp $CONFROOT/static/httpd.conf $HTTPROOT/httpd.conf
+  ln -fs $CONFROOT/static/httpd.conf $HTTPROOT/httpd.conf
 fi
 
 # Setting up static index.html
@@ -40,10 +40,10 @@ fi
 
 # For php
 if [ ! -s $HTTPROOT/php.ini ]; then
-  cp /usr/local/share/examples/php5/php.ini-recommended $HTTPROOT/php.ini
+  ln -fs /usr/local/share/examples/php5/php.ini-recommended $HTTPROOT/php.ini
 fi
 if [ ! -s $HTTPROOT/modules/php5.conf ]; then
-  cp /usr/local/share/examples/php5/php5.conf $HTTPROOT/modules/php5.conf
+  ln -fs /usr/local/share/examples/php5/php5.conf $HTTPROOT/modules/php5.conf
 fi
 if [ ! -s $HTTPROOT/php5/dba.ini ]; then
   ln -fs $HTTPROOT/php5.sample/dba.ini $HTTPROOT/php5/dba.ini
@@ -100,6 +100,12 @@ make_dir /var/www/htdocs/confbackup
 chown www:www /var/www/htdocs/confbackup
 
 # Create webserver auth keys and restart apache
-cd /var/www/tuvastaja/keygen
-sh keygen.sh $HOST.$DOM
+if [ ! -s /var/www/tuvastaja/data/apache/ssl/private/server.key ]; then 
+  cd /var/www/tuvastaja/keygen
+  sh keygen.sh $HOST.$DOM
+fi
 
+apachectl configtest
+apachectl stop
+sleep 3
+apachectl start

@@ -17,6 +17,11 @@ MRTGCONF=$MRTGPATH/mrtg.cfg
 MRTGLOG=$MRTGPATH/mrtg.log
 MRTGRRDPATH=/var/www/tuvastaja/data/rrd
 
+NETSTAT=$CONFROOT/netstat.sh
+CPUUSAGE=$CONFROOT/cpuusage.sh
+DISKUSAGE=$CONFROOT/diskusage.sh
+MEMUSAGE=$CONFROOT/memoryusage.sh
+
 CRONFILE=/tmp/crontab.mrtg
 CRONTASK="*/5 * * * *  /usr/local/bin/mrtg --user _mrtg --group www $MRTGCONF --logging $MRTGLOG >/dev/null 2>&1"
 
@@ -32,10 +37,83 @@ chown _mrtg:www $MRTGPATH
 make_dir $MRTGRRDPATH
 chown _mrtg:www $MRTGRRDPATH
 
-if [ ! -s $MRTGCONF ]; then
-  cp $CONFROOT/static/mrtg.cfg $MRTGCONF
-  chown _mrtg:www $MRTGCONF
-fi
+NETDEVS=`netstat -ibn | grep Link | grep 1500 | grep -v trunk | sed -e 's/^\([a-z]*[0-9]*\).*/\1/g'`
+
+date=`date`
+cat << EOF > $MRTGCONF
+# Created by gen_mrtg script at $date
+
+EnableIPv6: no
+WorkDir: $MRTGRRDPATH
+Options[_]: bits,growright
+
+LogFormat: rrdtool
+PathAdd: /usr/local/bin
+
+EOF
+
+number=2
+for i in $NETDEVS; do
+  echo "#" >> $MRTGCONF
+  echo "# Network interface $i Monitoring" >> $MRTGCONF
+  echo "#" >> $MRTGCONF
+  echo "Target[server.if$number]: \`$NETSTAT $i\`" >> $MRTGCONF
+  echo "SetEnv[server.if$number]: MRTG_INT_IP=\"\" MRTG_INT_DESCR=\"$i\"" >> $MRTGCONF
+  echo "MaxBytes[server.if$number]: 125000000000" >> $MRTGCONF
+  echo "Title[server.if$number]: Interface $i" >> $MRTGCONF
+  echo "PageTop[server.if$number]: <h1>Interface $i</h1>" >> $MRTGCONF
+  echo "" >> $MRTGCONF
+  number=$(($number + 1))
+done
+
+cat << EOF >> $MRTGCONF
+#
+# CPU Monitoring (5 minutes user,nice,system,interrupt vs idle time)
+#
+Target[server.cpu]: \`$CPUUSAGE \`
+Title[server.cpu]: Server CPU Load
+PageTop[server.cpu]: <H1>CPU Load</H1>
+MaxBytes[server.cpu]: 100
+ShortLegend[server.cpu]: %
+YLegend[server.cpu]: CPU Utilization
+Legend1[server.cpu]: Current CPU percentage load
+LegendI[server.cpu]: Used
+LegendO[server.cpu]:
+Options[server.cpu]: gauge,growright,nopercent
+Unscaled[server.cpu]: ymwd
+
+#
+# Memory Monitoring (Used versus Total Memory)
+#
+Target[server.memory]: \`$MEMUSAGE \`
+Title[server.memory]: Memory in use
+PageTop[server.memory]: <H1>Memory in use</H1>
+MaxBytes[server.memory]: 68719476736
+ShortLegend[server.memory]: B
+YLegend[server.memory]: Bytes
+LegendI[server.memory]: Used
+LegendO[server.memory]: Total
+Legend1[server.memory]: Used memory
+Legend2[server.memory]: Total memory
+Options[server.memory]: gauge,growright,nopercent
+#kMG[server.memory]: k,M,G,T,P,X
+
+#
+# Disk Usage Monitoring
+#
+Target[server.disk]: \`$DISKUSAGE \`
+Title[server.disk]: Disk Partition Usage
+PageTop[server.disk]: <H1>Disk Partition Usage / and /var/www/tuvastaja/data</H1>
+MaxBytes[server.disk]: 100
+ShortLegend[server.disk]: %
+YLegend[server.disk]: Utilization
+LegendI[server.disk]: /
+LegendO[server.disk]: /var/www/tuvastaja/data
+Options[server.disk]: gauge,growright,nopercent
+Unscaled[server.disk]: ymwd
+EOF
+
+chown _mrtg:www $MRTGCONF
 
 crontab -l > $CRONFILE
 if ! grep -q -R "mrtg.cfg" $CRONFILE; then 

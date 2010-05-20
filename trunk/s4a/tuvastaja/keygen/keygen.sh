@@ -18,8 +18,6 @@ KEYFILE="$GENDIR/server.key"
 REQFILE="$GENDIR/server.csr"
 CERTFILE="$GENDIR/server.crt"
 
-
-
 # genereerin paringu
 openssl req -sha1  -new -keyout "$KEYFILE" -config "$CONFFILE"  -subj "/C=ee/CN=$1" -out "$REQFILE" -nodes
 
@@ -28,12 +26,7 @@ openssl x509 -req -days 3600 -in "$REQFILE" -signkey "$KEYFILE" -out "$CERTFILE"
 
 # Panen failid kuhu vaja
 
-cp "$CERTFILE" /var/www/tuvastaja/data/apache/ssl/server.crt
-cp "$KEYFILE"  /var/www/tuvastaja/data/apache/ssl/private/server.key
+mv "$CERTFILE" /var/www/tuvastaja/data/apache/ssl/server.crt
+mv "$KEYFILE"  /var/www/tuvastaja/data/apache/ssl/private/server.key
 rm "$REQFILE"
 
-apachectl configtest
-
-apachectl stop
-sleep 3
-apachectl start

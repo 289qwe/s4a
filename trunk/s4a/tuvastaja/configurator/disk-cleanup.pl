@@ -29,13 +29,16 @@ sub clean_partition {
 	}
 
 	my $i = int((time() - $oldest) / 86400);
+	if (!-e "/var/www/tuvastaja/data/updater-logs/updater.log.0" ) {
+		system("touch /var/www/tuvastaja/data/updater-logs/updater.log.0"); 
+	}
 	while ($i > 1 && disk_used($mountpoint) > $max_usage) {
-		#print "Cleanig $i days old files\n";
+		#print "Cleaning $i days old files\n";
 		system("find $dirs -mtime +$i -type f -exec rm {} \\;");
 		sleep 60; # let df catch up
 		$i--;
 	}
 }
 
-clean_partition("/var/www/tuvastaja/data", "/var/www/tuvastaja/data/snort-logs /var/www/tuvastaja/data/snort-reports /var/www/tuvastaja/data/updater-logs/*.*", $max_percent);
+clean_partition("/var/www/tuvastaja/data", "/var/www/tuvastaja/data/snort-logs/*.[0-9]* /var/www/tuvastaja/data/snort-reports /var/www/tuvastaja/data/updater-logs/*.[0-9]*", $max_percent);
 clean_partition("/", "/var/log/*.[0-9]* /var/www/logs/*.[0-9]*", $max_percent);

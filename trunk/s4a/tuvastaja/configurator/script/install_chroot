@@ -55,23 +55,17 @@ do
 	copy_binary $cmd
 done
 
-
 # rrd fonts...
 mkdir -p usr/local/share/rrdtool/fonts
 cp /usr/local/share/rrdtool/fonts/*.ttf usr/local/share/rrdtool/fonts/
 echo rrdtool fonts installed to ${PREFIX}
 
 # timezone
+TZ=`readlink /etc/localtime`
 if [ ! -e /var/www/etc/localtime ] 
 then
-	mkdir -p /var/www/usr/share/zoneinfo 
+	mkdir -p /var/www/etc /var/www/usr/share/zoneinfo
 	cp -R /usr/share/zoneinfo/* /var/www/usr/share/zoneinfo/
-	if [ ! -d /var/www/etc ]
-	then
-		mkdir /var/www/etc
-	fi
-	cd /var/www/etc 
-	ln -sf ../usr/share/zoneinfo/Europe/Tallinn localtime
+	ln -sf "..$TZ" etc/localtime
 	echo zoneinfo installed to ${PREFIX}
 fi
-exit 1

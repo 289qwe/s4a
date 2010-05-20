@@ -58,30 +58,30 @@ while [ 0 ]; do
            $D --title "$TITLE" --msgbox "$error" 15 80
            unset error
          else
-           (echo "`cat $VARDIR/$HOSTNAME` $EMAILPARAMS `date`:";
-           echo "$ETH: `cat $VARDIR/$IFACE`";
-           echo "$TRUNK: `cat $VARDIR/$TRUNKIFACES`";
-           echo "$IP2: `cat $VARDIR/$IPADDR`";
-           echo "$IP5: `cat $VARDIR/$HOSTNAME`";
-           echo "$IP6: `cat $VARDIR/$DOMAIN`";
-           echo "$IP3: `cat $VARDIR/$SUBMASK`";
-           echo "$IP4: `cat $VARDIR/$GATEWAY`";
-           echo "$IP7: `cat $VARDIR/$DNS`";
-           echo "$NTP: `cat $VARDIR/$NTPADDR`";
-           echo "$SNMP: `cat $VARDIR/$SNMPADDR`";
-           echo "$SNMPCOMMUNITY: `cat $VARDIR/$ROCOMMUNITY`";
-           echo "$SNORT: `cat $VARDIR/$LOCALNETS`";
-           echo "$SYSLOG: `cat $VARDIR/$SYSLOGSERVER`";
-           echo "$CERT1: `cat $VARDIR/$SHORTNAME`";
-           echo "$CERT2: `cat $VARDIR/$LONGNAME`";
-           echo "$CERT3: `cat $VARDIR/$ORG`";
-           echo "$CERT4: `cat $VARDIR/$CENTRAL`";
-           echo "$CERT5: `cat $VARDIR/$SECONDCENTRAL`";
-           echo "$VERSION: `cat $VARDIR/$SOFTVER`";
-           echo "$EMAILMSG: `cat $VARDIR/$SMTPADDR`";
-           ) | mail -s "`cat $VARDIR/$HOSTNAME`.`cat $VARDIR/$DOMAIN` post"\
-           `cat $VARDIR/$ADMINMAIL`
-           $D --title "$TITLE" --msgbox "$EMAILSENT `cat $VARDIR/$ADMINMAIL`" 15 50;
+           (echo "`cat $VAR_HOSTNAME` $EMAILPARAMS `date`:";
+           echo "$ETH: `cat $VAR_IFACE`";
+           echo "$TRUNK: `cat $VAR_TRUNKIFACES`";
+           echo "$IP2: `cat $VAR_IP_ADDRESS`";
+           echo "$IP5: `cat $VAR_HOSTNAME`";
+           echo "$IP6: `cat $VAR_DOMAIN`";
+           echo "$IP3: `cat $VAR_SUBNET_MASK`";
+           echo "$IP4: `cat $VAR_DEFAULT_GATEWAY`";
+           echo "$IP7: `cat $VAR_NAMESERVERS`";
+           echo "$NTP: `cat $VAR_NTP_SERVER`";
+           echo "$SNMP: `cat $VAR_SNMP_SERVER`";
+           #echo "$SNMPCOMMUNITY: `cat $VAR_RO_COMMUNITY`";
+           echo "$SNORT: `cat $VAR_LOCALNETS`";
+           echo "$SYSLOG: `cat $VAR_SYSLOGSERVER`";
+           echo "$CERT1: `cat $VAR_SHORTNAME`";
+           echo "$CERT2: `cat $VAR_FULLNAME`";
+           echo "$CERT3: `cat $VAR_ORGANISATION`";
+           echo "$CERT4: `cat $VAR_CENTRALSERVER`";
+           echo "$CERT5: `cat $VAR_SECONDCENTRAL`";
+           echo "$VERSION: `cat $VAR_SOFTWARE_VERSION`";
+           echo "$EMAILMSG: `cat $VAR_SMTP`";
+           ) | mail -s "`cat $VAR_HOSTNAME`.`cat $VAR_DOMAIN` post"\
+           `cat $VAR_ADMIN_EMAIL`
+           $D --title "$TITLE" --msgbox "$EMAILSENT `cat $VAR_ADMIN_EMAIL`" 15 50;
          fi;;
     "5") rm -f /tmp/retemail
          exit 0

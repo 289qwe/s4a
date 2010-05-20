@@ -17,11 +17,11 @@ TRUNKHOST=/etc/hostname.trunk0
 
 # Create hostname files
 for dev in $TRUNKNET; do
-  print "up\n!ifconfig \$if -inet6" > /etc/hostname.$dev
+  print "up description $MONITORNET\n!ifconfig \$if -inet6" > /etc/hostname.$dev
   chmod 640 /etc/hostname.$dev
 done
 
-print "up\n!ifconfig \$if -inet6" > $TRUNKHOST
+print "up description $MONITORNET\n!ifconfig \$if -inet6" > $TRUNKHOST
 LINE="trunkproto broadcast trunkport"
 SEPAR=" "
 for INT in $TRUNKNET; do

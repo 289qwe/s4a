@@ -11,9 +11,8 @@ require "/usr/local/s4a-centre/sigsupporter/sighelper.pm";
 
 my $s4a_map = "/var/www/etc/s4a-map";
 my $sigdir = "/var/www/confserv/signatures";
-my $sigverfile = "current-";
+my $sigverfile = "current-rules";
 my $sigfile = "signatures-";
-my $verinfo = "4.6";
 
 my $new_tar = $ARGV[0];
 my $cur_tar;
@@ -135,7 +134,4 @@ if (defined($cur_tar) and (-e $cur_tar)) {
 copy("$new_tar", "$sigdir/$sigfile$now.tgz") || die "Copy($new_tar, $sigdir/$sigfile$now.tgz): $!";
 
 
-writeCursigdate("$sigdir/$sigverfile$verinfo", $now);
-
-
-
+writeCursigdate("$sigdir/$sigverfile", $now);

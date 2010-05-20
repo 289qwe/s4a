@@ -51,7 +51,7 @@ while true; do
 
   choice=`cat /tmp/retdevip` 
   eval "DEV=\$tmp$choice"
-  echo "$DEV" >$VARDIR/IFACE.var 
+  echo "$DEV" > $VAR_IFACE 
   sh devtrunk.sh
   exit 0
 done

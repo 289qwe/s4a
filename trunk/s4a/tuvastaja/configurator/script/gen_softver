@@ -16,4 +16,4 @@ fi
 OSVER=`uname -r`
 PATCHLEVEL=`cat /var/www/tuvastaja/updater/status/patchlevel`
 
-echo "$OSVER.$PATCHLEVEL" >  $VARDIR/$SOFTVER
+echo "$OSVER.$PATCHLEVEL" > $VAR_SOFTWARE_VERSION

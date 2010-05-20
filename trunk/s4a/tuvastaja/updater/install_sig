@@ -7,7 +7,7 @@ LOGGER="logger -s -t $0 -p  local3.warning "
 LOGGERINFO="logger -s -t $0 -p  local3.info "
 
 STATUSDIR="/var/www/tuvastaja/updater/status"
-LEVELFILE="/var/www/tuvastaja/data/snort-logs/siglevel"
+LEVELFILE="/var/www/tuvastaja/data/snort/siglevel"
 FLAGFILE="$STATUSDIR/get-newsignature"
 
 if [ ! -f "$FLAGFILE"  ]; then

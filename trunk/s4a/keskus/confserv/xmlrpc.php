@@ -244,7 +244,7 @@ function tuvastaja_rrdfunc($method_name, $params, $app_data)
 		socket_close($sock);
 
 		$softversion = get_current_xlevel(UPDATE_DIR_PATH, $params[0]['baseversion']);
-		$ruleversion = get_current_xlevel(RULE_DIR_PATH, $params[0]['baseversion']);
+		$ruleversion = get_current_xlevel(RULE_DIR_PATH, 'rules');
 
 		$tuvver = $params[0]['baseversion'].".".$tuvver = $params[0]['patchlevel'];
 		$timestamp = time();

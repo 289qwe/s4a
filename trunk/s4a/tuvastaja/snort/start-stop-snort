@@ -2,20 +2,16 @@
 
 # /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
 
-
 BINARY=/usr/local/bin/snort
-
 SNORTROOT=/var/www/tuvastaja/snort
 CONF=$SNORTROOT/snort.conf
-
-LOGDIRROOT=/var/www/tuvastaja/data
-SNORTLOG=$LOGDIRROOT/snort-logs
-
+SNORTLOG=/var/www/tuvastaja/data/snort-logs
 WATCHDOGRRD=$SNORTROOT/stats/dog.rrd
 
-INTERFACE=trunk0
-
 SN=`/usr/bin/basename $BINARY`
+
+TZ="`readlink /etc/localtime | sed -e 's/^\/usr\/share\/zoneinfo\/\(.*$\)/\1/g'`"
+export TZ
 
 case "$1" in
 	start)
@@ -23,7 +19,7 @@ case "$1" in
 			mkdir $SNORTLOG
 			chown _snort.www $SNORTLOG
 		fi
-		$BINARY -D -y -x -c $CONF -u _snort -g www -t $SNORTLOG -l $SNORTLOG -i $INTERFACE --pid-path $SNORTLOG >$SNORTLOG/snort.out 2>&1
+		$BINARY -c $CONF -x --pid-path $SNORTLOG >$SNORTLOG/snort.out 2>&1
 	;;
 	stop)
 		pkill snort

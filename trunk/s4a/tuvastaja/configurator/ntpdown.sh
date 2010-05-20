@@ -9,4 +9,4 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-if_running ntpd _ntp
+if_running ntpd

@@ -12,8 +12,11 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-EMAIL=`cat $VAR_ADMIN_EMAIL`
+if [ ! -s $VAR_ADMIN_EMAIL ]; then
+  echo "$NOSYSLOG" > $VAR_ADMIN_EMAIL
+fi
 
+EMAIL=`cat $VAR_ADMIN_EMAIL`
 
 DEFAULT_ALIAS=$CONFROOT/static/aliases
 ALIASES=/etc/mail/aliases
