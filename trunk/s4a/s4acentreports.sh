@@ -10,7 +10,7 @@ PWD=`pwd`
 ROOT=$PWD
 CENTRE=s4a-centre
 
-VER=4.6.3
+VER=`cat keskus/s4a-view/index.html | grep "^<head.*S4A keskus" | sed -e 's/^.* \([0-9\.]*\).*$/\1/g'`
 
 ARCHIVE=$CENTRE-$VER.tar.gz
 

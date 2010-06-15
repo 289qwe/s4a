@@ -184,6 +184,10 @@ void plot_gd(rrd_value_t *data, int rows, int fields, FILE **of, ImgCtx *img, Si
 					dy = img->box_height;
 				}
 
+				if ((val > 0) && (dy < 3)) {
+					dy = 3;
+				}
+
 				int boxx = (fc / 4);
 				int boxy = 0;
 				while (boxx >= img->elems_in_row) {

@@ -17,7 +17,7 @@ typedef struct struct_update {
 	int ds;
 	int file;
 	char *updstr;
-	char *tmplstr;
+//	char *tmplstr;
 	UT_hash_handle hh;
 } Update;
 

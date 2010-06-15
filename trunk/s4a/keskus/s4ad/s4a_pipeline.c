@@ -21,7 +21,8 @@
 #define S4A_5_MINUTES 300
 #define S4A_CONFIG "/var/www/etc/s4a-map"
 #define BUF_SIZE 4096
-#define SIGS_IN_RRD 100 
+#define SIGS_IN_RRD 100
+#define DS_FOR_SIG 4 
 #define UPDATE_LENGTH ((SIGS_IN_RRD * 8) + 2) 
 
 #define S4A_MAX_RRD_FILES 100
@@ -56,7 +57,7 @@ void writer_main(int p0, int p1);
 
 int create_global_rrd (const char* rrd_name) {
 
-	#define GLOBAL_RRD_COUNT 10
+	#define GLOBAL_RRD_COUNT 12
 	
 	int ret = -1;
 	char **rrdarg = NULL;
@@ -66,14 +67,16 @@ int create_global_rrd (const char* rrd_name) {
 	}
 	rrdarg[0] = strdup("create");	
 	rrdarg[1] = strdup(rrd_name);
-	rrdarg[2] = strdup("RRA:AVERAGE:0.5:1:864");	
-	rrdarg[3] = strdup("RRA:AVERAGE:0.5:12:168");	
-	rrdarg[4] = strdup("RRA:AVERAGE:0.5:288:31");	
-	rrdarg[5] = strdup("RRA:AVERAGE:0.5:2016:52");
-	rrdarg[6] = strdup("DS:alerts:GAUGE:600:U:U"); 
-	rrdarg[7] = strdup("DS:sigs:GAUGE:600:U:U"); 
-	rrdarg[8] = strdup("DS:badratio:GAUGE:600:U:U"); 
-	rrdarg[9] = strdup("DS:extip:GAUGE:600:U:U"); 
+	rrdarg[2] = strdup("--start");
+	rrdarg[3] = strdup("now - 700s");
+	rrdarg[4] = strdup("RRA:AVERAGE:0.5:1:864");	
+	rrdarg[5] = strdup("RRA:AVERAGE:0.5:12:168");	
+	rrdarg[6] = strdup("RRA:AVERAGE:0.5:288:31");	
+	rrdarg[7] = strdup("RRA:AVERAGE:0.5:2016:52");
+	rrdarg[8] = strdup("DS:alerts:GAUGE:600:U:U"); 
+	rrdarg[9] = strdup("DS:sigs:GAUGE:600:U:U"); 
+	rrdarg[10] = strdup("DS:badratio:GAUGE:600:U:U"); 
+	rrdarg[11] = strdup("DS:extip:GAUGE:600:U:U"); 
 
 	int ii = 0;
 	for (ii = 0; ii < GLOBAL_RRD_COUNT; ii++) {
@@ -100,7 +103,8 @@ error:
 
 int create_single_rrd (const char* rrd_name) {
 
-	#define RRD_COUNT (6 + (4 * SIGS_IN_RRD)) 
+	#define RRD_CREATE_COMMAND_FIELDS 8
+	#define RRD_COUNT (RRD_CREATE_COMMAND_FIELDS + (DS_FOR_SIG * SIGS_IN_RRD)) 
 	
 	int ret = -1;
 	char **rrdarg = NULL;
@@ -110,14 +114,16 @@ int create_single_rrd (const char* rrd_name) {
 	}
 	rrdarg[0] = strdup("create");	
 	rrdarg[1] = strdup(rrd_name);
-	rrdarg[2] = strdup("RRA:AVERAGE:0.5:1:864");	
-	rrdarg[3] = strdup("RRA:AVERAGE:0.5:12:168");	
-	rrdarg[4] = strdup("RRA:AVERAGE:0.5:288:31");	
-	rrdarg[5] = strdup("RRA:AVERAGE:0.5:2016:52");
+	rrdarg[2] = strdup("--start");
+	rrdarg[3] = strdup("now - 700s");
+	rrdarg[4] = strdup("RRA:AVERAGE:0.5:1:864");	
+	rrdarg[5] = strdup("RRA:AVERAGE:0.5:12:168");	
+	rrdarg[6] = strdup("RRA:AVERAGE:0.5:288:31");	
+	rrdarg[7] = strdup("RRA:AVERAGE:0.5:2016:52");
 
 	int ii = 0;
 	for (ii = 0; ii < SIGS_IN_RRD; ii++) {
-		int idx = (ii*4) + 6;
+		int idx = (ii * DS_FOR_SIG) + RRD_CREATE_COMMAND_FIELDS;
 		size_t buf_len = 0;
 		
 		rrdarg[idx + 0] = strdup("DS:alertsXXXX:GAUGE:600:U:U");
@@ -168,47 +174,60 @@ error:
 	return ret;
 }
 
-int store_single_rrd (const char *type, const char* rrd_name, const char* rrd_tmpl_str, const char* rrd_update_str) {
 
-	#define RRD_UPDATE_COMMAND_FIELDS 5
+time_t last_update_time(const char* rrd_name) {
+	#define RRD_LASTUPDATE_COMMAND_FIELDS 2
+
+	time_t ret = -1;
+
+	char **rrdupd00 = NULL;
+	rrdupd00 = (char**)malloc(RRD_LASTUPDATE_COMMAND_FIELDS * sizeof(char *));
+	if (rrdupd00 == NULL) {
+		goto end;
+	}
+	rrdupd00[0] = strdup("lastupdate");
+	rrdupd00[1] = strdup(rrd_name);
+	 
+	int ii = 0;
+	for (ii = 0; ii < RRD_LASTUPDATE_COMMAND_FIELDS; ii++) {
+		if (rrdupd00[ii] == NULL) {
+			goto end;
+		}
+	}
+			
+	ret = rrd_last(RRD_LASTUPDATE_COMMAND_FIELDS, rrdupd00);
+
+end:
+	if (rrdupd00) {
+		for (ii = 0; ii < RRD_LASTUPDATE_COMMAND_FIELDS; ii++) {
+			free(rrdupd00[ii]);
+		}  
+	 
+		free(rrdupd00);
+	}
+		
+	return ret;
+}
+
+int do_update(const char* rrd_name, const char* rrd_update_str) {
+	#define RRD_UPDATE_COMMAND_FIELDS 3
 
 	int ret = -1;
+
 	char **rrdupd00 = NULL;
 	rrdupd00 = (char**)malloc(RRD_UPDATE_COMMAND_FIELDS * sizeof(char *));
 	if (rrdupd00 == NULL) {
 		goto end;
 	}
-	rrdupd00[0] = strdup("update");	
+	rrdupd00[0] = strdup("update");
 	rrdupd00[1] = strdup(rrd_name);
-	rrdupd00[2] = strdup("--template");
-	rrdupd00[3] = strdup(rrd_tmpl_str);
-	rrdupd00[4] = strdup(rrd_update_str);
+	rrdupd00[2] = strdup(rrd_update_str);
 
 	int ii = 0;
 	for (ii = 0; ii < RRD_UPDATE_COMMAND_FIELDS; ii++) {
 		if (rrdupd00[ii] == NULL) {
 			goto end;
 		}
-	}
-
-	ret = rrd_update(RRD_UPDATE_COMMAND_FIELDS, rrdupd00);
-	if (ret == 0) {
-		goto end;
-	}
-
-	if (errno != ENOENT) {
-		goto end;
-	}
-
-	rrd_clear_error();
-	if (strcmp("global", type) == 0) {
-		ret = create_global_rrd(rrd_name);
-	}
-	else {	
-		ret = create_single_rrd(rrd_name);
-	}
-	if (ret != 0) {
-		goto end;
 	}
 
 	ret = rrd_update(RRD_UPDATE_COMMAND_FIELDS, rrdupd00);
@@ -221,6 +240,102 @@ end:
 
 		free(rrdupd00);
 	}
+
+	return ret;
+}
+
+int update_zeros (const char* rrd_name, time_t now, int zeros) {
+	int ret = -1;
+	char timestr[11];
+	snprintf(timestr, 11, "%d", now);
+
+	int emptylen = 0;
+	char* empty = NULL;
+
+	emptylen = 2 * zeros;
+	emptylen += 10; // time_t in str
+	emptylen += 1; // \0
+
+	empty = malloc(emptylen);
+	if (empty == NULL) {
+		goto end;
+	}
+
+	memset(empty, 0, emptylen);
+	strlcat(empty, timestr, emptylen);
+	while (zeros) {
+		strlcat(empty, ":0", emptylen);
+		zeros--;
+	}
+
+	ret = do_update(rrd_name, empty);
+
+end:
+	if (empty) {
+		free(empty);
+	}
+
+	return ret;
+}
+
+
+int store_single_rrd (const char *type, const char* rrd_name, const char* rrd_update_str) {
+ 
+	int ret = -1;
+	struct stat buffer;
+	if (stat(rrd_name, &buffer) == -1) {
+		if (errno != ENOENT) {
+			goto end;
+		}
+		if (strcmp("global", type) == 0) {
+			ret = create_global_rrd(rrd_name);
+		}
+		else {
+			ret = create_single_rrd(rrd_name);
+		}
+		if (ret != 0) {
+			goto end;
+		}
+	}
+
+	time_t now = time(NULL);
+	if (now == -1) {
+		goto end;
+	}
+
+	time_t last_upd = last_update_time(rrd_name);
+	if (last_upd == -1) {
+		goto end;
+	}
+
+	if (now - last_upd >  S4A_5_MINUTES) {
+		int zeros = 0;
+		if (strcmp("global", type) == 0) {
+			zeros = 4;
+		}
+		else {
+			zeros = SIGS_IN_RRD * DS_FOR_SIG;
+		}
+
+		now -= S4A_5_MINUTES;
+		if (now - last_upd > S4A_5_MINUTES) {
+			now -= S4A_5_MINUTES;	
+			ret = update_zeros(rrd_name, now, zeros);
+			if (ret == -1) {
+				goto end;
+			}
+			now += S4A_5_MINUTES;
+		}
+
+		ret = update_zeros(rrd_name, now, zeros);
+		if (ret == -1) {
+			goto end;
+		}
+	}
+
+	ret = do_update(rrd_name, rrd_update_str);
+
+end:
 
 	return ret;
 }
@@ -260,7 +375,7 @@ Update* Update_new()
 		ret->ds = 0;
 		ret->file = 0;
 		ret->updstr = NULL;
-		ret->tmplstr = NULL;
+//		ret->tmplstr = NULL;
 	}
 	return ret;	
 }
@@ -269,7 +384,7 @@ void Update_free(Update *upd)
 {
 	if (upd) {
 		free(upd->updstr);
-		free(upd->tmplstr);
+//		free(upd->tmplstr);
 		free(upd);
 	}
 }
@@ -705,6 +820,9 @@ void S4ACtx_load_config(S4ACtx *ctx)
 
 void S4ACtx_handle_update(S4ACtx *ctx, Update *upd, const char *detector)
 {
+
+// XXX: Siin funktsioonis peame lahti saama template'ist ja peame koostama korrektse ::::::::::::::::: stringi
+
 	if (ctx && upd) {
 		syslog(LOG_DEBUG, "Detector: %s %d updates to file %d", detector, HASH_COUNT(upd), upd->file);
 
@@ -715,8 +833,15 @@ void S4ACtx_handle_update(S4ACtx *ctx, Update *upd, const char *detector)
 		ssize_t msg_len = 0;
 		Update *it = NULL;
 		for (it = upd; it != NULL; it = it->hh.next) {
-			msg_len += (strlen(it->updstr) + strlen(it->tmplstr));
+			msg_len += strlen(it->updstr); 
+//			msg_len += strlen(it->tmplstr);
 		}
+
+		int unkn = SIGS_IN_RRD - HASH_COUNT(upd);
+		msg_len += (unkn * DS_FOR_SIG * 2);
+
+//		Update *tst = NULL;
+//		HASH_FIND_INT(files[upd->file], &(upd->ds), tst);
 
 		msg_len += (strlen(detector) + 1);
 		msg_len += (strlen(fnum) + 1);
@@ -728,15 +853,30 @@ void S4ACtx_handle_update(S4ACtx *ctx, Update *upd, const char *detector)
 			strlcat(msg, detector, msg_len);
 			strlcat(msg, "\t", msg_len);
 			strlcat(msg, fnum, msg_len);				
-			strlcat(msg, "\t", msg_len);
-			for (it = upd; it != NULL; it = it->hh.next) {
-				strlcat(msg, it->tmplstr, msg_len);
-			}
-			msg[strlen(msg) - 1] = '\0';
+			//strlcat(msg, "\t", msg_len);
+			//for (it = upd; it != NULL; it = it->hh.next) {
+			//	strlcat(msg, it->tmplstr, msg_len);
+			//}
+			//msg[strlen(msg) - 1] = '\0';
+
 			strlcat(msg, "\tN", msg_len);
-			for (it = upd; it != NULL; it = it->hh.next) {
-				strlcat(msg, it->updstr, msg_len);
+
+			int ds = 0;
+			for (ds = 0; ds < SIGS_IN_RRD; ds++) {
+				Update *tst = NULL;
+				HASH_FIND_INT(upd, &ds, tst);
+				if (tst) {
+					strlcat(msg, tst->updstr, msg_len);
+				}
+				else {
+					strlcat(msg, ":0:0:0:0", msg_len);
+				}
 			}
+
+//			for (it = upd; it != NULL; it = it->hh.next) {
+//				strlcat(msg, it->updstr, msg_len);
+//			}
+
 			MsgQueueEntry *ee = MsgQueueEntry_new(-1);
 			MsgQueueEntry_set(ee, msg, msg_len);
 			if (MsgQueue_push(&(ctx->w_qu), ee) == -1) {
@@ -754,7 +894,7 @@ Update* S4ACtx_compose_update(S4ACtx *ctx, int sid, float ds1, float ds2, float 
 		SidMapping *sm = SidMapping_find(ctx, sid);
 		if (sm) {
 			char *tmpupd = NULL;
-			char *tmptmpl = NULL;
+//			char *tmptmpl = NULL;
 
 			ret = Update_new();
 			if (ret) {
@@ -765,10 +905,11 @@ Update* S4ACtx_compose_update(S4ACtx *ctx, int sid, float ds1, float ds2, float 
 				}
 				ret->updstr = tmpupd;
 
-				if (asprintf(&tmptmpl, "alerts%d:intip%d:extip%d:srcdst%d:", sm->ds, sm->ds, sm->ds, sm->ds) == -1) {
-					goto error;
-				}
-				ret->tmplstr = tmptmpl;
+// XXX: Update template väli on liigne
+//				if (asprintf(&tmptmpl, "alerts%d:intip%d:extip%d:srcdst%d:", sm->ds, sm->ds, sm->ds, sm->ds) == -1) {
+//					goto error;
+//				}
+//				ret->tmplstr = tmptmpl;
 				goto ok;
 			}
 		}
@@ -819,12 +960,12 @@ void setup_signals()
 	signal(SIGALRM, SIG_IGN);
 	signal(SIGTERM, sig_die);
 	signal(SIGURG, SIG_DFL);	// discard signal      urgent condition present on socket
-	// SIGSTOP cannot be caught or ignored    stop process        stop (cannot be caught or ignored)
-	signal(SIGTSTP, SIG_DFL);	// stop process        stop signal generated from keyboard
+	// SIGSTOP cannot be caught or ignored    stop process	stop (cannot be caught or ignored)
+	signal(SIGTSTP, SIG_DFL);	// stop process	stop signal generated from keyboard
 	signal(SIGCONT, SIG_DFL);	// discard signal      continue after stop
 	signal(SIGCHLD, SIG_IGN);
-	signal(SIGTTIN, SIG_DFL);	// stop process        background read attempted from control terminal
-	signal(SIGTTOU, SIG_DFL);	// stop process        background write attempted to control terminal
+	signal(SIGTTIN, SIG_DFL);	// stop process	background read attempted from control terminal
+	signal(SIGTTOU, SIG_DFL);	// stop process	background write attempted to control terminal
 	signal(SIGIO, SIG_DFL);		// discard signal      I/O is possible on a descriptor (see fcntl(2))
 	signal(SIGXCPU, SIG_DFL);	// terminate process   CPU time limit exceeded (see setrlimit(2))
 	signal(SIGXFSZ, SIG_DFL);	// terminate process   file size limit exceeded (see setrlimit(2))
@@ -907,7 +1048,6 @@ char* handle_global_line(S4ACtx *ctx, char *detector, char *line)
 
 	msg_len += strlen(detector) + 1;
 	msg_len += strlen("global") + 1;
-	msg_len += strlen("alerts:sigs:badratio:extip") + 1;
 	msg_len += strlen("N::::") + 1 +
 			strlen(data[1]) + strlen(data[2]) + 
 			strlen(data[3]) + strlen(data[4]);
@@ -918,8 +1058,6 @@ char* handle_global_line(S4ACtx *ctx, char *detector, char *line)
 		strlcat(msg, detector, msg_len);
 		strlcat(msg, "\t", msg_len);
 		strlcat(msg, "global", msg_len);				
-		strlcat(msg, "\t", msg_len);
-		strlcat(msg, "alerts:sigs:badratio:extip", msg_len);
 		strlcat(msg, "\t", msg_len);
 		strlcat(msg, "N", msg_len);
 		strlcat(msg, ":", msg_len);
@@ -1315,9 +1453,9 @@ void s4a_main() {
 	}
 }
 
-void handle_rrd(const char *detector, const char *file, const char *tmpl, const char *upd)
+void handle_rrd(const char *detector, const char *file, const char *upd)
 {
-	if (detector && file && tmpl && upd) {
+	if (detector && file && upd) {
 		syslog(LOG_DEBUG, "%s %s", detector, file);
 		char dirname[BUF_SIZE];
 		char filename[BUF_SIZE];
@@ -1349,7 +1487,7 @@ void handle_rrd(const char *detector, const char *file, const char *tmpl, const 
 			return;
 		}
 	
-		if (store_single_rrd(file, filename, tmpl, upd) != 0) {
+		if (store_single_rrd(file, filename, upd) != 0) {
 			syslog(LOG_WARNING, rrd_get_error());
 			rrd_clear_error();
 			return;
@@ -1362,7 +1500,7 @@ void handle_rrd(const char *detector, const char *file, const char *tmpl, const 
 
 int handle_msg(MsgBuffer *mb)
 {
-	#define S4A_TOKENS_IN_WRITER_MSG 4
+	#define S4A_TOKENS_IN_WRITER_MSG 3 
 
 	int ret = -1;
 	if (mb) {
@@ -1389,7 +1527,7 @@ int handle_msg(MsgBuffer *mb)
 			}
 		}
 
-		handle_rrd(data[0], data[1], data[2], data[3]);
+		handle_rrd(data[0], data[1], data[2]);
 	}
 	else {
 		syslog(LOG_NOTICE, "Anomaly in file (%s), line (%d)", __FILE__, __LINE__);
