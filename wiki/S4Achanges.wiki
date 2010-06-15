@@ -55,6 +55,11 @@
  * improved adding detectors to the database: command argument is tgz-archive-file that comes from s4a-ca; added batch-mode capability.
  * fixed sigsupporter module where current sigfile info stores universal file.
 
+=== 4.6.4 / 4.7.0  ===
+
+ * improved RRD storage algorithm which is more robust and also infrequent alerts are recorded correctly.
+ * fixed graphing algorithm which ensures that low-frequency alerts are not hidden by high-frequency alerts.
+
 == s4a-ca ==
 === 4.6.6 ===
 
