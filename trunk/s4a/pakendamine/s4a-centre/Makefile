@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.54 2009/08/16 13:31:27 rui Exp $
 
-VERSION =		4.6.4
+VERSION =		4.7.1
 COMMENT =		S4A centralserver software
 DISTNAME =		s4a-centre-${VERSION}
 

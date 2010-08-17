@@ -35,8 +35,6 @@ install:
 	mkdir -p $(PREFIX)/tmp
 	mkdir -p $(PREFIX)/etc
 
-	touch $(PREFIX)/$(CONFSERVLOGS)/confserv.log
-
 	$(INSTALL) $(CONF) $(CONFSERV) $(DATABASE) $(S4AVIEW) $(PREFIX)/
 	$(INSTALL) $(KEYGEN) $(SIGSUPPORTER) $(S4ACENTRE)/
 	chgrp -R wheel $(PREFIX)/$(CONF) $(PREFIX)/$(CONFSERV) $(PREFIX)/$(CONFSERVLOGS) \
