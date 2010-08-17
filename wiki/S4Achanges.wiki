@@ -38,6 +38,22 @@
  * improved network devices descriptions
  * improvments installing s4a-detector to the empty OpenBSD machine from package
 
+=== 4.7.1 ===
+
+ * more precise diskusage graph script
+ * bugfixes in tempfiles and returncodes (snortomatic sends correct codes to the central server)
+ * improved hostname regex, based on RFC
+ * improved generation of packetfilter configuration: moved to separate target that depends on network parameters changes
+ * fixes about reporting expired certificates
+ * corrected warning levels about CPU Utilization
+ * improved communication of central server where not configured detector doesn't connect to the central server
+ * snort general configuration updates
+ * OpenBSD 4.7 fixes about using pkg_add in installing patches
+ * developed new graph showing snort drop rate, needs specific snort preprocessor turned on (switched on automatically)
+ * improved loading certificates where checked whether key and cert are compatible
+ * fixes about snortomatic's waldo file
+ * added p5-File-Sync to s4a-detector package dependecy
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -59,6 +75,11 @@
 
  * improved RRD storage algorithm which is more robust and also infrequent alerts are recorded correctly.
  * fixed graphing algorithm which ensures that low-frequency alerts are not hidden by high-frequency alerts.
+
+=== 4.7.1 ===
+
+ * No service with the s4a-detector that has expired certificate
+ * removed confserv.log file from s4a-centre package list, admin has to deal with it himself/herself
 
 == s4a-ca ==
 === 4.6.6 ===
