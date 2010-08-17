@@ -23,6 +23,7 @@ use RPC::XML::Parser;
 use WWW::Curl::Easy;
 use GDBM_File;
 use File::Copy;
+use File::Sync qw(sync);
 
 my $snorto_start = time;
 
@@ -30,6 +31,7 @@ my $dir_tuvastaja = "/var/www/tuvastaja";
 my $dir_tuvastaja_data = $dir_tuvastaja . "/data";
 my $dir_updater = $dir_tuvastaja . "/updater";
 my $dir_status = $dir_updater . "/status";
+my $patchlevel = $dir_status . "/patchlevel";
 my $ipcountfile = $dir_tuvastaja . "/ipcounter/ipcounter.txt";
 my @cidrlist = ();
 my $gdbm_root = $dir_tuvastaja_data . "/snort-reports";
@@ -105,6 +107,7 @@ my $inputsize = 0;
 my $processedlines = 0;
 
 openlog('snortomatic', 'ndelay,pid', LOG_LOCAL3);
+die syslog(LOG_INFO, "No version set. Exiting") unless -e $patchlevel;
 syslog(LOG_DEBUG, "Started inspection");
 
 if (! -d $gdbm_root) {
@@ -126,9 +129,16 @@ else {
 		load_cidr();
 
 		if (-e $waldofile) {
-			my $waldofromf = retrieve($waldofile);
-			$waldo = ${$waldofromf};
-			syslog(LOG_DEBUG, "Using waldo from $waldofile");
+			my $waldofromf;
+			eval { 
+				$waldofromf = retrieve($waldofile);
+				$waldo = ${$waldofromf};
+				syslog(LOG_DEBUG, "Using waldo from $waldofile");
+			};
+			if ($@) {
+				$waldo = 0;
+				syslog(LOG_WARNING, "Waldo file damaged, using waldo = $waldo");
+			}
 		}
 
 		if ($waldo > $inputsize) {
@@ -140,6 +150,7 @@ else {
 	
 		syslog(LOG_DEBUG, "Storing waldo $waldo to $waldofile");
 		store \$waldo, $waldofile;
+		sync();
 
 		print_stats();
 	}
@@ -321,7 +332,7 @@ sub print_stats {
 	$centralheader{'BADRATIO'} = 0;
 	if ($globalstats{'activeip'} > 0) {
 		$globalstats{'badratio'} = ($globalstats{'intip'}/$globalstats{'activeip'}) * 100;
-		$centralheader{'badratio'} = ($centralheader{'INTIP'}/$globalstats{'activeip'}) * 100;
+		$centralheader{'BADRATIO'} = ($centralheader{'INTIP'}/$globalstats{'activeip'}) * 100;
 	}
 
 	syslog(LOG_DEBUG, "(alerts, signatures, sources, destinations, internal ip's, external ip's, active ip's): 
@@ -366,7 +377,7 @@ sub prepare_rrd_request {
 	my @perrule_metrics;
 	my $basever = read1frompipe("/usr/bin/uname -r");
 	my $snortstatus = 
-		system("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort > /dev/null");
+		(system("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort > /dev/null") >> 8);
 	my $mac = my_mac();
 
 	if ($send_type eq "data") {

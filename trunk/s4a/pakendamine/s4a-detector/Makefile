@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.54 2009/08/16 13:31:27 rui Exp $
 
-VERSION = 		4.7.0
+VERSION = 		4.7.1
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
@@ -24,6 +24,7 @@ RUN_DEPENDS =		\
 			mrtg::net/mrtg \
 			nrpe::net/nagios/nrpe \
 			p5-Class-Accessor::devel/p5-Class-Accessor \
+			p5-File-Sync::devel/p5-File-Sync \
 			p5-Filesys-Df::sysutils/p5-Filesys-Df \
 			p5-GDBM_File::databases/p5-GDBM_File \
 			p5-Nagios-Plugin::net/nagios/p5-Nagios-Plugin \

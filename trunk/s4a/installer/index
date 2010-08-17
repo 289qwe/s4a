@@ -20,6 +20,7 @@ p5-Crypt-DES-2.05p1
 p5-Crypt-SSLeay-0.57p0
 p5-Digest-HMAC-1.01p0
 p5-Digest-SHA1-2.12
+p5-File-Sync-0.09p0
 p5-Filesys-Df-0.92p1
 p5-GDBM_File-1.08p0
 p5-HTML-Parser-3.64
@@ -47,5 +48,5 @@ php5-core-5.2.12p1
 php5-dba-5.2.12p0
 png-1.2.41
 rrdtool-1.2.30
-s4a-detector-4.7.0
+s4a-detector-4.7.1
 snort-2.8.5.2

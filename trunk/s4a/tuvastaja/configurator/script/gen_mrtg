@@ -21,6 +21,7 @@ NETSTAT=$CONFROOT/netstat.sh
 CPUUSAGE=$CONFROOT/cpuusage.sh
 DISKUSAGE=$CONFROOT/diskusage.sh
 MEMUSAGE=$CONFROOT/memoryusage.sh
+SNORTDR=$CONFROOT/snortdroprate.sh
 
 CRONFILE=/tmp/crontab.mrtg
 CRONTASK="*/5 * * * *  /usr/local/bin/mrtg --user _mrtg --group www $MRTGCONF --logging $MRTGLOG >/dev/null 2>&1"
@@ -111,6 +112,21 @@ LegendI[server.disk]: /
 LegendO[server.disk]: /var/www/tuvastaja/data
 Options[server.disk]: gauge,growright,nopercent
 Unscaled[server.disk]: ymwd
+
+#
+# Snort Drop Rate Monitoring
+#
+Target[server.snortdr]: \`$SNORTDR \`
+Title[server.snortdr]: Snort Drop Rate
+PageTop[server.snortdr]: <H1>Drop Rate</H1>
+MaxBytes[server.snortdr]: 100
+ShortLegend[server.snortdr]: %
+YLegend[server.snortdr]: Snort Drop Rate
+Legend1[server.snortdr]: Current Snort Drop Rate percentage
+LegendI[server.snortdr]: Used
+LegendO[server.snortdr]:
+Options[server.snortdr]: gauge,growright,nopercent
+Unscaled[server.snortdr]: ymwd
 EOF
 
 chown _mrtg:www $MRTGCONF

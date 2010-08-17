@@ -44,6 +44,7 @@ define( 'UI_SD_CBO_INTERVAL_YEAR', "Aasta ülevaade" );
 define( 'UI_SD_LBL_PROCESS_STATUS', "Turvaprotsessi jõudlusinfo" );
 define( 'UI_SD_LBL_SYSTEM_STATUS', "Süsteemi jõudlusinfo" );
 define( 'UI_SD_LBL_SNORTO', "Snorti logi analüsaatori töötamine" );
+define( 'UI_SD_LBL_SNORTDR', "Snorti poolt töötlemata jäänud pakettide määr" );
 define( 'UI_SD_LBL_IPS_RECORDED', "Sündmustega seotud IP-aadresse" );
 define( 'UI_SD_LBL_HOSTS_COUNT', "Aktiivseid ja nakatunud arvuteid sisevõrgus" );
 define( 'UI_SD_LBL_EVENTS_RECORDED', "Sündmusi" );
