@@ -7,12 +7,14 @@
 define ('CS_ADM', true);
 define ('XMLRPC_ERR_UNABLE_TO_CONNECT_TO_DB_TEXT', 'Internal database error!');
 define ('XMLRPC_ERR_UNABLE_TO_CONNECT_TO_DB_CODE', '001');
-define ('XMLRPC_ERR_DB_QUERY_FAILED_TEXT', 'Internal database error!!');
+define ('XMLRPC_ERR_DB_QUERY_FAILED_TEXT', 'Internal database error!');
 define ('XMLRPC_ERR_DB_QUERY_FAILED_CODE', '002');
 define ('XMLRPC_ERR_INACTIVE_CERTIFICATE_TEXT', 'Inactive or unknown certificate!');
 define ('XMLRPC_ERR_INACTIVE_CERTIFICATE_CODE', '003');
 define ('XMLRPC_ERR_AMBIGUOUS_MAC_TEXT', 'Supplied MAC does not match last update MAC!');
 define ('XMLRPC_ERR_AMBIGUOUS_MAC_CODE', '004');
+define ('XMLRPC_ERR_EXPIRED_CERTIFICATE_TEXT', 'Certificate has been expired!');
+define ('XMLRPC_ERR_EXPIRED_CERTIFICATE_CODE', '005');
 
 define ('RULE_DIR_PATH', '/confserv/signatures/');
 define ('UPDATE_DIR_PATH', '/confserv/patches/');
@@ -132,7 +134,10 @@ function tuvastaja_rrdfunc($method_name, $params, $app_data)
 	$ssl_client_cert_serial = $_SERVER['SSL_CLIENT_CERT_SERIAL'];
 	$ssl_client_cn = $_SERVER['SSL_CLIENT_CN'];
 	$visitorIP = $_SERVER['REMOTE_ADDR'];
-
+	$ssl_client_cert_end = $_SERVER['SSL_CLIENT_CERT_END'];
+	$client_end_time = strtotime("$ssl_client_cert_end");
+	$server_time = time();
+	
 	$dbh = new PDO(DB_FILE);
 
 	$retstr = '';
@@ -145,7 +150,16 @@ function tuvastaja_rrdfunc($method_name, $params, $app_data)
 
 	$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		
-	try {		
+	try {
+		if ($client_end_time < $server_time) {
+			$set_inactive=("UPDATE Certificate SET active = 0 WHERE serial = '$ssl_client_cert_serial';");
+                	$dbh->exec($set_inactive);
+			
+			syslog(LOG_ERR, "Client certificate has been expired");
+			return array('faultString' => XMLRPC_ERR_EXPIRED_CERTIFICATE_TEXT,
+					'faultCode' => XMLRPC_ERR_EXPIRED_CERTIFICATE_CODE);
+		}
+		
 		$sql = 'SELECT Certificate.active as cactive, '.
 			'Tuvastaja.shortname as tshortname, '.
 			'Tuvastaja.active as tactive, '.

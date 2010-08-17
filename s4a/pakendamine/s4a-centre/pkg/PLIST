@@ -7,7 +7,6 @@ conf/s4a.sample/s4a.conf
 conf/s4a.sample/s4aconf.conf
 confserv/
 confserv-logs/
-confserv-logs/confserv.log
 confserv/index.html
 confserv/patches/
 confserv/signatures/
