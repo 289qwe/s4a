@@ -22,7 +22,7 @@ ask=1
 
 # regexp's
 IPEXP="^[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}$"
-TEXTEXP="^[a-zA-Z0-9_-]*$"
+HOSTEXP="^[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]$"
 DOMAINEXP="^[a-zA-Z0-9\.-]*$"
 EMAILEXP="^.*@.*$"
 ANYEXP="^[a-zA-Z0-9_\.-]*$"
@@ -311,6 +311,7 @@ check_end ()
     elif [ "$KEY" = "exit" ]; then
       clear
       exit 1
+      rm /tmp/ret*
     else 
       return 1
     fi
@@ -325,6 +326,7 @@ check_end ()
       $D --title "$TITLE" --msgbox "$errorwarn" 30 100
       clear
       exit 0
+      rm /tmp/ret*
     else
       return 2
     fi
@@ -336,6 +338,7 @@ check_end ()
     elif [ "$KEY" = "exit" ]; then
       clear
       exit 0
+      rm /tmp/ret*
     else
       return 0
     fi

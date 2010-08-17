@@ -78,5 +78,3 @@ echo "# include \"$PFCONFLOCAL\"" >> $PFCONF
 if [ ! -f $PFCONFLOCAL ]; then
   touch $PFCONFLOCAL
 fi
-
-pfctl -f $PFCONF

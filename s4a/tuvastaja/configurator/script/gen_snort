@@ -65,7 +65,7 @@ if ! grep -q -R "alert.fast" $SYSLOG; then
 fi
 
 if [ ! -s $VAR_LOCALNETS ]; then
-  exit 0
+  exit 1
 fi
 
 # From here on only with the good configuration
@@ -91,6 +91,11 @@ if [ ! -s $SNORTDATA/conf/statements.conf ]; then
 fi
 if [ ! -s $SNORTDATA/conf/unicode.map ]; then
   cp $CONFROOT/static/unicode.map $SNORTDATA/conf/unicode.map
+fi
+
+# For Snort Drop Rate
+if ! grep -q -R "^preprocessor perfmonitor:" $SNORTDATA/conf/preprocessors.conf; then
+  echo "`tail -2 $CONFROOT/static/preprocessors.conf`" >> $SNORTDATA/conf/preprocessors.conf
 fi
 
 # Set localnets and then paste static variables-conf

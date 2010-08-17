@@ -26,6 +26,7 @@ else
 fi
 
 TARNAME=`echo $CERTDIR | sed 's/^.*\/\([a-z0-9]*\)/\1/'`.tgz
+SECRETWORDSFILE=/usr/share/dict/propernames
 
 kmenu=1
 while [ 0 ]; do
@@ -56,33 +57,78 @@ while [ 0 ]; do
            $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50
            exit 1
          fi;;
-    "2") mount_usb
-         CONF=`find $MOUNTDIR -maxdepth 1 -name tuvastaja.tgz`
-         
-         if [ -n "$CONF" ]; then
-           tar xzf $CONF -C $CERTDIR
-           if [ "$1" != "secondary" ]; then
-             if [ -s $CERTDIR/$PATCHNAME ]; then
-               cat $CERTDIR/$PATCHNAME >> /etc/ssl/pkgca.pem
-               cat $CERTDIR/$CANAME >> /etc/ssl/pkgca.pem
-               NOCERT=""
+    "2") if [ -s $CERTDIR/$KEYNAME ]; then
+           mount_usb
+           CONF=`find $MOUNTDIR -maxdepth 1 -name tuvastaja.tgz`
+           if [ -n "$CONF" ]; then
+             TMPCERTDIR=`mktemp -d /tmp/cacerts.XXXXXXXX`
+             tar xzf $CONF -C $TMPCERTDIR
+           
+             # Check cert and key
+             CRTMD5=`openssl x509 -noout -modulus -in $TMPCERTDIR/$DETNAME | openssl md5`
+             KEYMD5=`openssl rsa -noout -modulus -in $CERTDIR/$KEYNAME | openssl md5`
+             if [ $CRTMD5 = $KEYMD5 ]; then
+               MAXLINES=`wc -l $SECRETWORDSFILE | sed -e 's/^ *\([0-9]*\).*/\1/g'` 
+               SECRET="`sed "$(($RANDOM%$MAXLINES))q;d" $SECRETWORDSFILE` loves `sed "$(($RANDOM%$MAXLINES))q;d" $SECRETWORDSFILE`"
+               SECRETFILE=`mktemp $TMPCERTDIR/XXXXXXXX`
+               echo $SECRET > $SECRETFILE
+               # Encrypt using public key and decrypt using private key
+               openssl rsautl -encrypt -in $SECRETFILE -inkey $TMPCERTDIR/$DETNAME -certin -out "$SECRETFILE".bin
+               SECRETDECRYPT=`openssl rsautl -decrypt -in "$SECRETFILE".bin -inkey $CERTDIR/$KEYNAME`
+               ret=$?
+               if [ $ret -ne 0 ]; then
+                 # OpenSSL error
+                 rm -rf $TMPCERTDIR
+                 $D --title "$TITLE" --msgbox "$KEYCERTDIFF\n\n$SUGGESTNEWREQ" 15 70
+                 umount_usb
+                 exit 1
+               fi
+               if [ "$SECRET" = "$SECRETDECRYPT" ]; then
+                 rm $SECRETFILE*
+                 cp $TMPCERTDIR/* $CERTDIR/
+                 rm -rf $TMPCERTDIR
+                 if [ "$1" != "secondary" ]; then
+                   if [ -s $CERTDIR/$PATCHNAME ]; then
+                     cat $CERTDIR/$PATCHNAME >> /etc/ssl/pkgca.pem
+                     cat $CERTDIR/$CANAME >> /etc/ssl/pkgca.pem
+                     NOCERT=""
+                   else
+                     NOCERT="$NOPATCHCERT"
+                   fi
+                 else
+                   NOCERT=""
+                 fi
+                 perl $CONFROOT/getcertdata "$1"
+               
+                 # Make modification to nrpe.local.cfg with Centralserver
+                 cd $CONFROOT
+                 make_conf nrpe
+                 $D --title "$TITLE" --msgbox "$KEYSUCC\n\n$NOCERT" 15 50
+                 umount_usb
+                 exit 0
+               else
+                 # can't decrypt encrypted secretmessage, cert and key files doesn't match
+                 rm -rf $TMPCERTDIR
+                 $D --title "$TITLE" --msgbox "$KEYCERTDIFF\n\n$SUGGESTNEWREQ" 15 70
+                 umount_usb
+                 exit 1
+               fi
              else
-               NOCERT="$NOPATCHCERT"
+               # md5sum of cert and key files doesn't match
+               rm -rf $TMPCERTDIR
+               $D --title "$TITLE" --msgbox "$KEYCERTDIFF\n\n$SUGGESTNEWREQ" 15 70 
+               umount_usb
+               exit 1
              fi
            else
-             NOCERT=""
+             # Cannot find tuvastaja.tgz
+             $D --title "$TITLE" --msgbox "$KEYCERTFAIL" 15 50
+             umount_usb
+             exit 1
            fi
-           perl $CONFROOT/getcertdata "$1"
-         
-           # Make modification to nrpe.local.cfg with Centralserver
-           cd $CONFROOT
-           make_conf nrpe
-           $D --title "$TITLE" --msgbox "$KEYSUCC\n\n$NOCERT" 15 50
-           umount_usb
-           exit 0
          else
-           $D --title "$TITLE" --msgbox "$KEYCERTFAIL" 15 50
-           umount_usb
+           # Key-file is missing
+           $D --title "$TITLE" --msgbox "$NOCERTFILE $DETECTORKEY\n\n$SUGGESTNEWREQ" 15 70 
            exit 1
          fi;;
     "3") mount_usb

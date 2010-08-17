@@ -39,7 +39,7 @@ all:
 
 preboot: simplenet
 
-net: simplenet http
+net: simplenet http pf
 
 simplenet: $(VAR_IFACE) $(VAR_IP_ADDRESS) $(VAR_SUBNET_MASK) $(VAR_HOSTNAME) $(VAR_DOMAIN) \
 	$(VAR_TRUNKIFACES) $(VAR_DEFAULT_GATEWAY) $(VAR_NAMESERVERS)
@@ -80,8 +80,11 @@ nrpe: $(VAR_SNMP_SERVER)
 	sh script/gen_nrpe
 	/usr/local/sbin/nrpe -c /etc/nrpe.cfg -d
 
-monitoring: nrpe
+pf: $(VAR_IFACE) $(VAR_IP_ADDRESS) $(VAR_TRUNKIFACES)
 	sh script/gen_pfconf
+	pfctl -f /etc/pf.conf
+	
+monitoring: nrpe pf
 
 syslog: snort $(VAR_SYSLOGSERVER)
 	sh syslogdown.sh
@@ -89,7 +92,7 @@ syslog: snort $(VAR_SYSLOGSERVER)
 	syslogd -a /var/www/dev/log -a /var/empty/dev/log
 
 $(PATCHLEVEL):
-	echo 0 > $(PATCHLEVEL)
+	echo 1 > $(PATCHLEVEL)
 
 $(VAR_SOFTWARE_VERSION): $(PATCHLEVEL)
 	sh script/gen_softver

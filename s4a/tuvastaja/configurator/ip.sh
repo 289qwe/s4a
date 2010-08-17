@@ -34,7 +34,7 @@ while [ 0 ]; do
     "2") ask_value "$IP2ASK" "$IPADDR" "$IPEXP" "$FAILIP";; 
     "3") ask_value "$IP3ASK" "$SUBMASK" "$IPEXP" "$FAILIP";; 
     "4") ask_value "$IP4ASK" "$GATEWAY" "$IPEXP" "$FAILIP";; 
-    "5") ask_value "$IP5ASK" "$HOSTNAME" "$TEXTEXP" "$FAILTEXT";;
+    "5") ask_value "$IP5ASK" "$HOSTNAME" "$HOSTEXP" "$FAILTEXT";;
     "6") ask_value "$IP6ASK" "$DOMAIN" "$DOMAINEXP" "$FAILDOMAIN";;
     "7") ask_value "$IP7ASK" "$DNS" "$IPEXP" "$FAILIP";;
     "8") sh showsettings.sh;; 

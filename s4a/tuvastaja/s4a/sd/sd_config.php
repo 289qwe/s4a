@@ -161,7 +161,6 @@ $seventsdefs = array(
 	"GPRINT:lastalerts:Last update\: %m-%d-%y %T %z:strftime" 
 );
 
-
 $memorydefs = array(
 	"-v", "Bytes" ,
 	"-b", "1024", # base value
@@ -267,6 +266,26 @@ $snortodefs = array(
 	"GPRINT:lastsecs:Last update\: %m-%d-%y %T %z:strftime" 
 );
 
+$snortdrdefs = array(
+	"-v", "Percent" ,
+	"-b", "1000", # base value
+	"-l", "0",	# lower-limit
+	"DEF:droprate=".$CONFIG['grapher_rrd_tree']."/XrrdnameX.snortdr.rrd:ds0:AVERAGE" ,
+	"VDEF:maxdroprate=droprate,MAXIMUM" ,
+	"VDEF:avgdroprate=droprate,AVERAGE" ,
+	"VDEF:lastdroprate=droprate,LAST" ,
+	"COMMENT:              " ,
+	"COMMENT:Average " ,
+	"COMMENT:    Max  " ,
+	"COMMENT:Current  \l" ,
+	"AREA:droprate#00cc00:Drop Rate " ,
+	"GPRINT:avgdroprate:%8.1lf" ,
+	"GPRINT:maxdroprate:%8.1lf" ,
+	"GPRINT:lastdroprate:%8.1lf" ,
+	"COMMENT:\l" ,
+	"GPRINT:lastdroprate:Last update\: %m-%d-%y %T %z:strftime" 
+);
+
 $hostcdefs = array(
 	"-v", "Homenet hosts" ,
 	"-b", "1000", # base value
@@ -296,7 +315,6 @@ $hostcdefs = array(
 	"GPRINT:lasthost:Last update\: %m-%d-%y %T %z:strftime" 
 );
 
-
 $if2statdefs = $ifstatdefstmp;
 $if2statdefs[6] = "DEF:in0=".$CONFIG['grapher_rrd_tree']."/XrrdnameX.if2.rrd:ds1:AVERAGE";
 $if2statdefs[7] = "DEF:out0=".$CONFIG['grapher_rrd_tree']."/XrrdnameX.if2.rrd:ds0:AVERAGE";
@@ -319,7 +337,8 @@ $alltargetdefs = array(
 	"if4" => $if4statdefs,
 	"cpu" => $cptdefs,
 	"disk" => $diskdefs,
-	"snorto" => $snortodefs
+	"snorto" => $snortodefs,
+	"snortdr" => $snortdrdefs
 );
 
 ?>

@@ -170,7 +170,8 @@ function sysGraphs($span)
 		"if4" => 'Interface bge2',
 		"cpu" => 'CPU Utilization',
 		"disk" => 'Disk Partition Usage',
-		"snorto" => 'Snortomatic runtime'
+		"snorto" => 'Snortomatic runtime',
+		"snortdr" => 'Snort Drop Rate'
 	);
 
 	foreach ($targets as $targetkey => $targetvalue) {
@@ -201,6 +202,8 @@ function sysGraphs($span)
  	$syss = $syss . '<img src="' . $CONFIG['system_graph_path_url'] . 'server.seventscount-' . $span . '.png' . $cachebuster . '"/>' . $div_end;
 	$syss = $syss . $div_display . $div_imagetitle . UI_SD_LBL_SNORTO . $div_end;
 	$syss = $syss . '<img src="' . $CONFIG['system_graph_path_url'] . 'server.snorto-' . $span . '.png' . $cachebuster . '"/>' . $div_end;
+	$syss = $syss . $div_display . $div_imagetitle . UI_SD_LBL_SNORTDR . $div_end;
+	$syss = $syss . '<img src="' . $CONFIG['system_graph_path_url'] . 'server.snortdr-' . $span . '.png' . $cachebuster . '"/>' . $div_end;
 	$syss = $syss . $div_end;
 
 	$syss = $syss . $div_block_line;	

@@ -12,12 +12,8 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-# Find out disk usage 
-ROOT=`df | grep \/$ | awk '{printf("%s\n",$5);}' | sed -e 's/%//g'`
-DATA=`df | grep \/var\/www\/tuvastaja\/data$ | awk '{printf("%s\n",$5);}' | sed -e 's/%//g'`
+SNORTCONF=/var/www/tuvastaja/data/snort/conf/preprocessors.conf
 
-# For MRTG
-echo $ROOT
-echo $DATA
-echo 0
-echo diskUsage
+cd $CONFROOT
+make nrpe snort
+sh $CONFROOT/script/gen_mrtg
