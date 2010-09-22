@@ -54,6 +54,14 @@
  * fixes about snortomatic's waldo file
  * added p5-File-Sync to s4a-detector package dependecy
 
+=== 4.7.2 ===
+
+ * added warning-screen to the configurator's Central Server menu when starting generate new certification request if key already exists
+ * slight improvements for collecting Snort Drop Rate
+ * changed sending Snort running information to the Central Server, now 0-100 (%) has been sent
+ * added Snort Drop Rate sending to the Central Server
+ * updated to the latest Snort software (2.8.6.1)
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -80,6 +88,14 @@
 
  * No service with the s4a-detector that has expired certificate
  * removed confserv.log file from s4a-centre package list, admin has to deal with it himself/herself
+
+=== 4.7.2 ===
+
+Changes according to new data sent by detectors:
+ * fixes storing detectors Snort running information, now 0-100 (%)
+ * added storing detectors Snort Drop Rate information in percent, (0-100)
+ * added storing detectors Snort rules version in date format.
+ * Changes in webinterface based on these changes.
 
 == s4a-ca ==
 === 4.6.6 ===
