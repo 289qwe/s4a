@@ -1,6 +1,11 @@
 <?php
 /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
 
+define ('RULE_DIR_PATH', '/confserv/signatures/');
+define ('FUNCTIONS', '/confserv/common-functions.php');
+
+include FUNCTIONS;
+
 $sid = isset($_GET['sid']) ? $_GET['sid'] : '';
 if ($_SERVER['REMOTE_USER'] == 'webroot') {
 	define ('S4A_ROOT', true);
@@ -47,7 +52,7 @@ $rowcount = 0;
 try {
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	$sql = "SELECT t.active, t.errormask, t.shortname, t.longname, t.lastvisit, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org WHERE t.sid = \"$sid\";";
+	$sql = "SELECT t.active, t.errormask, t.droprate, t.shortname, t.longname, t.lastvisit, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.lastvisitrulever, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org WHERE t.sid = \"$sid\";";
 
 	$query = null;
 	$query = $pdo->prepare($sql);
@@ -147,9 +152,11 @@ function compose_detector_header()
 	$outline .= '<th>L&uuml;hinimi</th>';
 	$outline .= '<th>Olek</th>';
 	$outline .= '<th>Snort</th>';
+	$outline .= '<th>TJPM</th>';
 	$outline .= '<th>Organisatsioon</th>';
 	$outline .= '<th>Kirjeldus</th>';
 	$outline .= '<th>Viimati n&auml;htud</th>';
+	$outline .= '<th>Kasutab reegleid</th>';
 	$outline .= '<th>MAC-aadress</th>';
 	$outline .= '<th>IP-aadress</th>';
 	$outline .= '<th>Tarkvara ver.</th>';
@@ -171,7 +178,8 @@ function compose_detector_row($sid, $row, $class, $url)
 	$active = $row['active'];
 	$status = intval($active);
 
-	$snort = intval($row['errormask']) & 0x1;
+	$snort = intval($row['errormask']);
+	$droprate = intval($row['droprate']);
 
 	$outline .= '<tr>';
 	$detector = $row['shortname'];
@@ -198,12 +206,25 @@ function compose_detector_row($sid, $row, $class, $url)
 	$outline .= '</td>';
 
 	$outline .= "<td class=\"$class centre\">";
-	if ($snort <= 0) {
+	if ($snort >= 95) {
 		$outline .= '<img src="images/icon_ok.png"></img>';
 	}
-	else {
+	elseif ($snort < 80) {
 		$outline .= '<img src="images/icon_error.gif"></img>';
 		$has_problem = 1;
+	}
+	else {
+		$outline .= '<img src="images/icon_alert.png"></img>';
+		$has_problem = 1;
+	}
+	
+	$outline .= "<td class=\"$class centre\">";
+	if ($droprate > 5) {
+		$outline .= '<img src="images/icon_error.gif"></img>';
+		$has_problem = 1;
+	}
+	else {
+		$outline .= '<img src="images/icon_ok.png"></img>';
 	}
 	$outline .= '</td>';
 
@@ -221,6 +242,21 @@ function compose_detector_row($sid, $row, $class, $url)
 		}
 		else {
 			$outline .= "<td class=$class>".date('Y-m-d H:i', $row['lastvisit'])."</td>";
+		}
+	}
+
+	if ($row['lastvisitrulever'] == 0) {
+		$outline .= "<td class=\"s4a-problem\"></td>";
+		$has_problem = 1;
+	}
+	else {
+		$currentruleversion = get_current_xlevel(RULE_DIR_PATH, 'rules');
+		if (intval($row['lastvisitrulever']) != $currentruleversion) {
+			$outline .= "<td class=\"s4a-problem\">".date('Y-m-d H:i', $row['lastvisitrulever'])."</td>";
+			$has_problem = 1;
+		}
+		else {
+			$outline .= "<td class=$class>".date('Y-m-d H:i', $row['lastvisitrulever'])."</td>";
 		}
 	}
 

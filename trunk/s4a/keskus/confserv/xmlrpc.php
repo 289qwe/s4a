@@ -19,51 +19,14 @@ define ('XMLRPC_ERR_EXPIRED_CERTIFICATE_CODE', '005');
 define ('RULE_DIR_PATH', '/confserv/signatures/');
 define ('UPDATE_DIR_PATH', '/confserv/patches/');
 define ('DB_FILE', 'sqlite:/database/s4aconf.db');
+define ('FUNCTIONS', '/confserv/common-functions.php');
 
 define ('S4A_PATH', '/tmp/s4a');
 define ('TIME_QUANTUM', 300);
 
 define ('REQUEST_INTERVAL', 3600); // 600sec = 10min  This is used to find duplicate identities due to misconfiguration
 
-/*
- * loeme failist esimese rea ja tagastame selle.
- * Kui faili pole siis tühi strig, see on normaalne seis
- */
-function string_fromfile($filename)
-{
-	$value = '';
-	if (file_exists($filename)) {
-		$handle = @fopen($filename, "r");
-		if ($handle) {
-			# Huvitab ainult esimene rida
-			$value = trim(fgets($handle, 4096));
-			fclose($handle);
-		}
-	}
-
-	return($value);
-}
-
-function get_current_xlevel($path,$basever)
-{
-	$value = string_fromfile($path."current-".$basever);
-	if ($value == "") {
-		return(0);
-	} 
-	else {
-		return($value);
-	}
-}
-
-function int2string($int, $numbytes=PHP_INT_SIZE)
-{
-	$str = "";
-	for ($ii = 0; $ii < $numbytes; $ii++) {
-		$str .= chr($int % 256);
-		$int = $int / 256;
-	}
-	return $str;
-}
+include FUNCTIONS;
 
 function s4a_send($ss, $buf, $buf_len)
 {
@@ -261,19 +224,19 @@ function tuvastaja_rrdfunc($method_name, $params, $app_data)
 		$ruleversion = get_current_xlevel(RULE_DIR_PATH, 'rules');
 
 		$tuvver = $params[0]['baseversion'].".".$tuvver = $params[0]['patchlevel'];
+		$tuvrulever = $params[0]['ruleversion'];
 		$timestamp = time();
-		$errormask = 0;
-		if ($params[0]['monitoringinfo']['snortstatus']) {
-			# snortstatus on 1. bitt
-			$errormask = $errormask | 0x1;
-		}
+		$errormask = $params[0]['monitoringinfo']['snortstatus'];
+		$droprate = $params[0]['monitoringinfo']['snortdroprate'];
 		$query = sprintf("UPDATE Tuvastaja SET lastvisit = %s, 
 					lastvisitMAC = %s, 
 					lastvisitver = %s, 
+					lastvisitrulever = %s,
 					lastvisitIP = %s, 
-					errormask = %s  WHERE sid = $sid;",
-					$dbh->quote($timestamp), $dbh->quote($currentMAC),
-					$dbh->quote($tuvver), $dbh->quote($visitorIP), $dbh->quote($errormask));
+					errormask = %s,
+					droprate = %s  WHERE sid = $sid;",
+					$dbh->quote($timestamp), $dbh->quote($currentMAC),$dbh->quote($tuvver),$dbh->quote($tuvrulever),
+					$dbh->quote($visitorIP), $dbh->quote($errormask), $dbh->quote($droprate));
 		$count = $dbh->exec($query);
 
 		$retstr = array("softversion"	  => $softversion, 

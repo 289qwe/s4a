@@ -8,10 +8,12 @@ CREATE TABLE Organisation (
 
 CREATE TABLE Tuvastaja ( 
 	active boolean,
+	droprate integer,
 	errormask integer,
 	lastvisit timestamp,
 	lastvisitMAC char,
 	lastvisitIP char,
+	lastvisitrulever timestamp,
 	lastvisitver char,
 	longname char,
 	shortname char,

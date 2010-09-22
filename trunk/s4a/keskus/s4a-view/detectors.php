@@ -2,6 +2,11 @@
 
 /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
 
+define ('RULE_DIR_PATH', '/confserv/signatures/');
+define ('FUNCTIONS', '/confserv/common-functions.php');
+
+include FUNCTIONS;
+
 if ($_SERVER['REMOTE_USER'] == 'webroot') {
 	define ('S4A_ROOT', true);
 }
@@ -73,7 +78,7 @@ try {
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 
-	$sql = 'SELECT t.active, t.errormask, t.shortname, t.longname, t.lastvisit, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org;';
+	$sql = 'SELECT t.active, t.errormask, t.droprate, t.shortname, t.longname, t.lastvisit, t.lastvisitrulever, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org;';
 
 	$query = null;
 	$query = $pdo->prepare($sql);
@@ -87,9 +92,11 @@ try {
 	print '<th>L&uuml;hinimi</th>';
 	print '<th>Aktiivne</th>';
 	print '<th>Snort</th>';
+	print '<th>TJPM</th>';
 	print '<th>Organisatsioon</th>';
 	print '<th>Kirjeldus</th>';
 	print '<th>Viimati n&auml;htud</th>';
+	print '<th>Kasutab reegleid</th>';
 	print '<th>MAC-aadress</th>';
 	print '<th>IP-aadress</th>';
 	print '<th>Tarkvara ver.</th>';
@@ -122,7 +129,8 @@ try {
 			$status = 0;
 		}
 
-		$snort = intval($row['errormask']) & 0x1;
+		$snort = intval($row['errormask']);
+		$droprate = intval($row['droprate']);
 
 		$outline .= '<tr>';
 
@@ -148,12 +156,25 @@ try {
 		$outline .= '</td>';
 
 		$outline .= "<td class=\"$td_class centre\">";
-		if ($snort <= 0) {
+		if ($snort >= 95) {
 			$outline .= '<img src="images/icon_ok.png"></img>';
 		}
-		else {
+		elseif ($snort < 80) {
 			$outline .= '<img src="images/icon_error.gif"></img>';
 			$has_problem = 1;
+		}
+		else {
+			$outline .= '<img src="images/icon_alert.png"></img>';
+			$has_problem = 1;
+		}
+		
+		$outline .= "<td class=\"$td_class centre\">";
+		if ($droprate > 5) {
+			$outline .= '<img src="images/icon_error.gif"></img>';
+			$has_problem = 1;
+		}
+		else {
+			$outline .= '<img src="images/icon_ok.png"></img>';
 		}
 		$outline .= '</td>';
 
@@ -171,6 +192,21 @@ try {
 			}
 			else {
 				$outline .= "<td class=$td_class>".date('Y-m-d H:i', $row['lastvisit'])."</td>";
+			}
+		}
+
+		if ($row['lastvisitrulever'] == 0) {
+			$outline .= "<td class=\"s4a-problem\"></td>";
+			$has_problem = 1;
+		}
+		else {
+			$currentruleversion = get_current_xlevel(RULE_DIR_PATH, 'rules');
+			if (intval($row['lastvisitrulever']) != $currentruleversion) {
+				$outline .= "<td class=\"s4a-problem\">".date('Y-m-d H:i', $row['lastvisitrulever'])."</td>";
+				$has_problem = 1;
+			}
+			else {
+				$outline .= "<td class=$td_class>".date('Y-m-d H:i', $row['lastvisitrulever'])."</td>";
 			}
 		}
 
