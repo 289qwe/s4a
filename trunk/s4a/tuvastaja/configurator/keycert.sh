@@ -13,10 +13,6 @@ fi
 # Include functions
 . $CONFROOT/functions.sh
 
-# Some neccessary variables
-HOST=`cat $VAR_HOSTNAME`
-DOM=`cat $VAR_DOMAIN`
-
 if [ "$1" = "secondary" ]; then
   CERTDIR=/var/www/tuvastaja/data/cacerts2
   MENUITEM=$ITEM5
@@ -40,15 +36,18 @@ while [ 0 ]; do
   case "$RETKEY" in
     "1") if [ -s $VAR_HOSTNAME ]; then
            if [ -s $VAR_DOMAIN ]; then
-             mount_usb
-             ask_value "$KEY1ASK" "$LOCALORG" "^.*$" "$FAILTEXT"
-             ./certreq.sh "$HOST.$DOM" "`cat $VAR_LOCALORG`"
-             cp /tmp/"$HOST.$DOM".req "$MOUNTDIR"/
-             cp /tmp/"$HOST.$DOM".key "$CERTDIR"/$KEYNAME
-             rm -f $VAR_LOCALORG /tmp/"$HOST.$DOM".*
-             umount_usb
-             $D --title "$TITLE" --msgbox "$REQSUCC" 15 50
-             exit 0
+             if [ -s "$CERTDIR"/$KEYNAME ]; then
+               $D --title "$TITLE" --menu "$KEYOVERWRITE" 15 60 2 1 "$NO" 2 "$YES" 2>/tmp/retkeyexist
+               ret=$?
+               cancel_pressed $ret
+               RETKEYEXIST="`cat /tmp/retkeyexist`"
+               case "$RETKEYEXIST" in
+                 "1") rm /tmp/retkeyexist;;
+                 "2") sh certreq.sh "$CERTDIR";;
+               esac
+             else
+               sh certreq.sh "$CERTDIR"
+             fi
            else
              $D --title "$TITLE" --msgbox "$NOHOSTDOM" 15 50
              exit 1
@@ -131,8 +130,7 @@ while [ 0 ]; do
            $D --title "$TITLE" --msgbox "$NOCERTFILE $DETECTORKEY\n\n$SUGGESTNEWREQ" 15 70 
            exit 1
          fi;;
-    "3") mount_usb
-         cd $CERTDIR
+    "3") cd $CERTDIR
          ret=0
          error=$CERTBACKUPFAIL
          verify_var "$CERTDIR/$CANAME";
@@ -154,9 +152,9 @@ while [ 0 ]; do
          if [ $ret -ne 0 ]; then
            $D --title "$TITLE" --msgbox "$error" 15 80
            unset error
-           umount_usb
            exit 1
          else
+           mount_usb
            tar czf /tmp/$TARNAME *
            crypt e /tmp/$TARNAME $MOUNTDIR/$TARNAME.enc
            if [ $? -ne 0 ]; then
@@ -175,7 +173,7 @@ while [ 0 ]; do
          else
            sh certrestore.sh "$TARNAME" "$CERTDIR" "secondary"
          fi;;
-    "5") rm -f /tmp/retkey
+    "5") rm -f /tmp/retkey*
          exit 0
   esac
 done

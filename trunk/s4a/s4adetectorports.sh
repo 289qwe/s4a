@@ -10,7 +10,7 @@ PWD=`pwd`
 ROOT=$PWD
 DET=s4a-detector
 
-LEVEL=`grep "echo [0-9]* > \$(PATCHLEVEL)" $ROOT/tuvastaja/configurator/Makefile | sed 's/.*echo \([0-9]*\) >.*/\1/'`
+LEVEL=`grep "echo [0-9]* > \$(PATCHLEVEL)" $ROOT/tuvastaja/configurator/Makefile | cut -d " " -f 2`
 VER=4.7.$LEVEL
 
 ARCHIVE=$DET-$VER.tar.gz

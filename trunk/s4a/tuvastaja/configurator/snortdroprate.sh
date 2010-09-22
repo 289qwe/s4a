@@ -46,6 +46,15 @@ fi
 
 DROPRATE=`tail -1 $STATFILE | cut -d , -f 2`
 
+# What if it's something else than expected
+if echo $DROPRATE | ! grep -q ^[0-9\.]*$; then
+  echo 0
+  echo 0
+  echo 0
+  echo NoValidValueInStatFile
+  exit 1
+fi
+
 # For MRTG
 echo $DROPRATE
 echo 0

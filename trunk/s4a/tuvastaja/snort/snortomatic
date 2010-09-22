@@ -40,6 +40,8 @@ my $waldo = 0;
 my $rrd_dir = $gdbm_root . "/rrd";
 my $dir_snort_logs = $dir_tuvastaja_data . "/snort-logs";
 my $dir_snort_sigs = $dir_tuvastaja_data . "/snort";
+my $dir_rrd_general = $dir_tuvastaja_data . "/rrd";
+my $dropraterrd = $dir_rrd_general . "/server.snortdr.rrd";
 my $pidfile = $dir_snort_logs . "/snortomatic.pid";
 my $inputfile = $dir_snort_logs . "/alert.fast";
 my $begintime = Time::ParseDate::parsedate('now - 6 minutes');
@@ -376,8 +378,8 @@ sub prepare_rrd_request {
 
 	my @perrule_metrics;
 	my $basever = read1frompipe("/usr/bin/uname -r");
-	my $snortstatus = 
-		(system("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort > /dev/null") >> 8);
+	my $snortstatus = read1frompipe("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort | cut -d \" \" -f 5 | cut -d . -f 1");
+	my $snortdroprate = read1frompipe("/usr/local/bin/rrdtool lastupdate $dropraterrd | tail -1 | cut -d \" \" -f 2 | cut -d . -f 1");
 	my $mac = my_mac();
 
 	if ($send_type eq "data") {
@@ -416,6 +418,7 @@ sub prepare_rrd_request {
 				'mymac' => RPC::XML::string->new($mac),
 				'monitoringinfo' => RPC::XML::struct->new({
 					'snortstatus' => RPC::XML::int->new($snortstatus),
+					'snortdroprate' => RPC::XML::int->new($snortdroprate),
 				}),
 				'currenttime' => RPC::XML::int->new(time()),
 				'perruledata' => RPC::XML::array->new(@perrule_metrics),
@@ -432,6 +435,7 @@ sub prepare_rrd_request {
 				'mymac' => RPC::XML::string->new($mac),
 				'monitoringinfo' => RPC::XML::struct->new({
 					'snortstatus' => RPC::XML::int->new($snortstatus),
+					'snortdroprate' => RPC::XML::int->new($snortdroprate),
 				}),
 				'currenttime' => RPC::XML::int->new(time())
 			})); 
