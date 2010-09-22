@@ -95,7 +95,7 @@ fi
 
 # For Snort Drop Rate
 if ! grep -q -R "^preprocessor perfmonitor:" $SNORTDATA/conf/preprocessors.conf; then
-  echo "`grep -R -A1 "^preprocessor perfmonitor:" static/preprocessors.conf`" >> $SNORTDATA/conf/preprocessors.conf
+  echo "`grep -A1 "^preprocessor perfmonitor:" static/preprocessors.conf`" >> $SNORTDATA/conf/preprocessors.conf
 fi
 
 # Set localnets and then paste static variables-conf
