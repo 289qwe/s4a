@@ -134,6 +134,7 @@ NOCERTFILE="Puudu on"
 NOPATCHCERT="Paikamise sertifikaati ei leitud.\nPaikade verifitseerimine ei õnnestu."
 KEYCERTDIFF="$DETECTORKEY ja $DETECTORCERT ei ole omavahel ühilduvad"
 SUGGESTNEWREQ="Võimalusel taastada sertifikaadid varukoopiast menüü \"$KEYRESTORE\" kaudu või tekitada uus päring menüü \"$KEY1\" kaudu"
+KEYOVERWRITE="HOIATUS! $DETECTORKEY on juba olemas!\nJätkamisel tekitatakse uus päring ning kirjutatakse kehtiv võti üle\nKAS TÕESTI JÄTKATA?"
 
 TRUNKFAIL="Viga Snorti liideste valimisel. Ühtegi liidest pole valitud?"
 WAIT="Võib kuluda mõni sekund, mil ekraanil ei näidata midagi, oota..."

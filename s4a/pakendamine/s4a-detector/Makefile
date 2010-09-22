@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.54 2009/08/16 13:31:27 rui Exp $
 
-VERSION = 		4.7.1
+VERSION = 		4.7.2
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
