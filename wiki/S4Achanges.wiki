@@ -62,6 +62,11 @@
  * added Snort Drop Rate sending to the Central Server
  * updated to the latest Snort software (2.8.6.1)
 
+=== 4.8.0 ===
+
+ * migrated to OpenBSD 4.8 official release
+ * fixes in finding disk for data destruction
+
 == s4a-centre ==
 === 4.6.2 ===
 
