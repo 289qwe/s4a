@@ -14,7 +14,12 @@ fi
 . $CONFROOT/functions.sh
 
 DD="512"
-DISK=`sysctl -n hw.disknames | sed 's/^.*\([sw]d0\).*/\1/'`
+DISKS=`sysctl -n hw.disknames | sed -e 's/,/ /g'`
+for i in $DISKS; do
+  if disklabel $i 2>/dev/null | grep -q "\/var\/www\/tuvastaja\/data"; then
+    DISK=$i
+  fi
+done
 SECTORS=`disklabel $DISK | grep "^total sectors:" | sed 's/[a-z: ]*\([0-9]*\)/\1/'`
 BS=$((512 * $DD))
 COUNT=$(($SECTORS / $DD))

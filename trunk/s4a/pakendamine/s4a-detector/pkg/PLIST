@@ -489,4 +489,4 @@ tuvastaja/updater/install_patch
 tuvastaja/updater/install_sig
 tuvastaja/updater/sighelper.pm
 tuvastaja/updater/status/
-@exec-update sh ${PREFIX}/tuvastaja/configurator/updates/4.7.2.sh
+@exec sh ${PREFIX}/tuvastaja/configurator/updates/4.6.10-install.sh

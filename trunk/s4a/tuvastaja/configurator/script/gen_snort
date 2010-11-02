@@ -64,8 +64,9 @@ if ! grep -q -R "alert.fast" $SYSLOG; then
   echo "$SYSSNORT" >> $SYSLOG
 fi
 
+# Exit 0, otherwise make stops.
 if [ ! -s $VAR_LOCALNETS ]; then
-  exit 1
+  exit 0
 fi
 
 # From here on only with the good configuration

@@ -92,7 +92,7 @@ syslog: snort $(VAR_SYSLOGSERVER)
 	syslogd -a /var/www/dev/log -a /var/empty/dev/log
 
 $(PATCHLEVEL):
-	echo 2 > $(PATCHLEVEL)
+	echo 0 > $(PATCHLEVEL)
 
 $(VAR_SOFTWARE_VERSION): $(PATCHLEVEL)
 	sh script/gen_softver

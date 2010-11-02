@@ -64,8 +64,8 @@ while [ 0 ]; do
              tar xzf $CONF -C $TMPCERTDIR
            
              # Check cert and key
-             CRTMD5=`openssl x509 -noout -modulus -in $TMPCERTDIR/$DETNAME | openssl md5`
-             KEYMD5=`openssl rsa -noout -modulus -in $CERTDIR/$KEYNAME | openssl md5`
+             CRTMD5=`openssl x509 -noout -modulus -in $TMPCERTDIR/$DETNAME | md5`
+             KEYMD5=`openssl rsa -noout -modulus -in $CERTDIR/$KEYNAME | md5`
              if [ $CRTMD5 = $KEYMD5 ]; then
                MAXLINES=`wc -l $SECRETWORDSFILE | sed -e 's/^ *\([0-9]*\).*/\1/g'` 
                SECRET="`sed "$(($RANDOM%$MAXLINES))q;d" $SECRETWORDSFILE` loves `sed "$(($RANDOM%$MAXLINES))q;d" $SECRETWORDSFILE`"

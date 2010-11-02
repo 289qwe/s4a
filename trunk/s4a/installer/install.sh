@@ -2,10 +2,9 @@
 
 # Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
 
-
 MAJ=4			# Version major number
-MIN=7			# Version minor number
-arch=i386		# Archidecture
+MIN=8			# Version minor number
+arch=i386		# Architecture
 TZ=Europe/Tallinn	# Time zones are in /usr/share/zoneinfo
 SETS="comp man misc xbase site"
 			# comp man misc game x{base,font,serv,share} site
@@ -46,7 +45,9 @@ fi
 echo Starting installation...
 
 # Find disks
-ALLDRIVES=`sysctl -n hw.disknames | sed 's/,/ /g'`
+ALLDRIVES=`sysctl -n hw.disknames | sed -e 's/,/ /g'` 
+# Probably in 4.9
+#ALLDRIVES=`sysctl -n hw.disknames | sed -e 's/:[0-9a-z]\{0,\},\{0,1\}/ /g'` 
 
 # filter out cd* and fd*
 NOCD="$ALLDRIVES"
@@ -158,9 +159,6 @@ newfs -q /dev/r${DISK}d
 else
   newfs -q /dev/r${DISK}a
 fi
-
-
-
 
 mount /dev/${DISK}a /mnt
 mkdir -p /mnt/{etc,tmp,usr,var,cd}
