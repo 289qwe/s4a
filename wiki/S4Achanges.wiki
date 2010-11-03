@@ -102,6 +102,10 @@ Changes according to new data sent by detectors:
  * added storing detectors Snort rules version in date format.
  * Changes in webinterface based on these changes.
 
+=== 4.8.0 ===
+ * package for OpenBSD 4.8 official release
+ * improved webinterface's snort column behavior for detectors older than 4.7.2
+
 == s4a-ca ==
 === 4.6.6 ===
 
