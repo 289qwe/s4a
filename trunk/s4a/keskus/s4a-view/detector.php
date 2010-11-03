@@ -206,16 +206,28 @@ function compose_detector_row($sid, $row, $class, $url)
 	$outline .= '</td>';
 
 	$outline .= "<td class=\"$class centre\">";
-	if ($snort >= 95) {
-		$outline .= '<img src="images/icon_ok.png"></img>';
-	}
-	elseif ($snort < 80) {
-		$outline .= '<img src="images/icon_error.gif"></img>';
-		$has_problem = 1;
+	$intversion = intval(str_replace(".", "",$row['lastvisitver']));
+	if ($intversion >= 472) {
+		if ($snort >= 95) {
+			$outline .= '<img src="images/icon_ok.png"></img>';
+		}
+		elseif ($snort < 80) {
+			$outline .= '<img src="images/icon_error.gif"></img>';
+			$has_problem = 1;
+		}
+		else {
+			$outline .= '<img src="images/icon_alert.png"></img>';
+			$has_problem = 1;
+		}
 	}
 	else {
-		$outline .= '<img src="images/icon_alert.png"></img>';
-		$has_problem = 1;
+		if ($snort == 0) {
+			$outline .= '<img src="images/icon_ok.png"></img>';
+		}
+		else {
+			$outline .= '<img src="images/icon_error.gif"></img>';
+			$has_problem = 1;
+		}
 	}
 	
 	$outline .= "<td class=\"$class centre\">";
