@@ -1,5 +1,5 @@
 
--- Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+-- Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
 
 CREATE TABLE Organisation ( 
 	name char,
@@ -12,6 +12,7 @@ CREATE TABLE Tuvastaja (
 	errormask integer,
 	lastvisit timestamp,
 	lastvisitMAC char,
+	serialno char,
 	lastvisitIP char,
 	lastvisitrulever timestamp,
 	lastvisitver char,

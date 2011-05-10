@@ -1,6 +1,6 @@
 <?php
 
-/* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+/* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 define ('RULE_DIR_PATH', '/confserv/signatures/');
 define ('FUNCTIONS', '/confserv/common-functions.php');
@@ -78,7 +78,7 @@ try {
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 
-	$sql = 'SELECT t.active, t.errormask, t.droprate, t.shortname, t.longname, t.lastvisit, t.lastvisitrulever, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org;';
+	$sql = 'SELECT t.active, t.errormask, t.droprate, t.serialno, t.shortname, t.longname, t.lastvisit, t.lastvisitrulever, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org;';
 
 	$query = null;
 	$query = $pdo->prepare($sql);
@@ -99,6 +99,7 @@ try {
 	print '<th>Kasutab reegleid</th>';
 	print '<th>MAC-aadress</th>';
 	print '<th>IP-aadress</th>';
+	print '<th>Seerianumber</th>';
 	print '<th>Tarkvara ver.</th>';
 	print '<th>Sert aktiivne</th>';
 	print '</tr>';
@@ -233,6 +234,14 @@ try {
 
 		if ($row['lastvisitIP']) {
 			$outline .= "<td class=\"$td_class\">".$row['lastvisitIP']."</td>";
+		}
+		else {
+			$outline .= "<td class=\"s4a-problem\"></td>";
+			$has_problem = 1;
+		}
+
+		if ($row['serialno']) {
+			$outline .= "<td class=\"$td_class\">".$row['serialno']."</td>";
 		}
 		else {
 			$outline .= "<td class=\"s4a-problem\"></td>";

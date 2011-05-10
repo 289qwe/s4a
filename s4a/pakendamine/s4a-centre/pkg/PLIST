@@ -17,9 +17,11 @@ database/activate_detector.php
 database/create_database.sh
 database/datamodel.sql
 database/datamodel_4.7.2-update.sql
+database/datamodel_4.8.1-update.sql
 database/show_detector.php
 database/triggerts.sql
 database/update_database_4.7.2.sh
+database/update_database_4.8.1.sh
 database/update_db.php
 etc/
 s4a-view/
@@ -68,3 +70,4 @@ s4a-centre/sigsupporter/sighelper.pm
 @bin bin/s4a-draw
 @bin bin/s4ad
 @exec-update sh ${PREFIX}/database/update_database_4.7.2.sh
+@exec-update sh ${PREFIX}/database/update_database_4.8.1.sh

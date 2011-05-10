@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+ * Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
  * */
 
 define ('CS_ADM', true);
@@ -223,24 +223,37 @@ function tuvastaja_rrdfunc($method_name, $params, $app_data)
 		$softversion = get_current_xlevel(UPDATE_DIR_PATH, $params[0]['baseversion']);
 		$ruleversion = get_current_xlevel(RULE_DIR_PATH, 'rules');
 
+		if (isset($params[0]['serialno'])){
+			$tuvserial = $params[0]['serialno'];
+		}
+		else {
+			$tuvserial = "";
+		}
 		$tuvver = $params[0]['baseversion'].".".$tuvver = $params[0]['patchlevel'];
 		$tuvrulever = $params[0]['ruleversion'];
 		$timestamp = time();
 		$errormask = $params[0]['monitoringinfo']['snortstatus'];
-		$droprate = $params[0]['monitoringinfo']['snortdroprate'];
+		if (isset($params[0]['monitoringinfo']['snortdroprate'])){
+			$droprate = $params[0]['monitoringinfo']['snortdroprate'];
+		}
+		else {
+			$droprate = "";
+		}
 		$query = sprintf("UPDATE Tuvastaja SET lastvisit = %s, 
 					lastvisitMAC = %s, 
 					lastvisitver = %s, 
 					lastvisitrulever = %s,
 					lastvisitIP = %s, 
+					serialno = %s,
 					errormask = %s,
 					droprate = %s  WHERE sid = $sid;",
 					$dbh->quote($timestamp), $dbh->quote($currentMAC),$dbh->quote($tuvver),$dbh->quote($tuvrulever),
-					$dbh->quote($visitorIP), $dbh->quote($errormask), $dbh->quote($droprate));
+					$dbh->quote($visitorIP), $dbh->quote($tuvserial),$dbh->quote($errormask), $dbh->quote($droprate));
 		$count = $dbh->exec($query);
 
 		$retstr = array("softversion"	  => $softversion, 
 				"ruleversion" 	  => $ruleversion, 
+				"serial_number"	  => $tuvserial,
 				"time_difference" => $time_difference_exact);
 
 	} 
