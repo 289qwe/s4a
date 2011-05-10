@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+/* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 define ('RULE_DIR_PATH', '/confserv/signatures/');
 define ('FUNCTIONS', '/confserv/common-functions.php');
@@ -52,7 +52,7 @@ $rowcount = 0;
 try {
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-	$sql = "SELECT t.active, t.errormask, t.droprate, t.shortname, t.longname, t.lastvisit, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.lastvisitrulever, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org WHERE t.sid = \"$sid\";";
+	$sql = "SELECT t.active, t.errormask, t.droprate, t.serialno, t.shortname, t.longname, t.lastvisit, t.lastvisitMAC, t.lastvisitIP, t.lastvisitver, t.lastvisitrulever, t.updated_by, t.sid, o.name AS tuvastaja_org FROM Tuvastaja AS t LEFT JOIN Organisation as o ON o.sid = t.tuvastaja_org WHERE t.sid = \"$sid\";";
 
 	$query = null;
 	$query = $pdo->prepare($sql);
@@ -159,6 +159,7 @@ function compose_detector_header()
 	$outline .= '<th>Kasutab reegleid</th>';
 	$outline .= '<th>MAC-aadress</th>';
 	$outline .= '<th>IP-aadress</th>';
+	$outline .= '<th>Seerianumber</th>';
 	$outline .= '<th>Tarkvara ver.</th>';
 
 	if (defined('S4A_ROOT')) {
@@ -282,6 +283,14 @@ function compose_detector_row($sid, $row, $class, $url)
 
 	if ($row['lastvisitIP']) {
 		$outline .= "<td class=\"$class\">".$row['lastvisitIP']."</td>";
+	}
+	else {
+		$outline .= "<td class=\"s4a-problem\"></td>";
+		$has_problem = 1;
+	}
+
+	if ($row['serialno']) {
+		$outline .= "<td class=\"$class\">".$row['serialno']."</td>";
 	}
 	else {
 		$outline .= "<td class=\"s4a-problem\"></td>";

@@ -1,6 +1,6 @@
 .Dd $Mdocdate$
 .Dt S4A-CENTRE 8
-.Os OpenBSD 4.8
+.Os OpenBSD 4.9
 .Sh NAME
 .Nm s4a-centre ,
 .Nm s4a-sig-current ,

@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.58 2010/07/21 12:27:41 edd Exp $
+# $OpenBSD: Makefile,v 1.60 2010/10/24 20:41:23 ajacoutot Exp $
 
-VERSION =		4.8.0
+VERSION =		4.9.0
 COMMENT =		S4A centralserver software
 DISTNAME =		s4a-centre-${VERSION}
 
@@ -17,20 +17,18 @@ PERMIT_DISTFILES_FTP =	Yes
 
 PATCH_DIST_STRIP =	-p0
 
-BUILD_DEPENDS =		::devel/uthash 
+BUILD_DEPENDS =		devel/uthash 
 
-LIB_DEPENDS =		rrd.>=3::net/rrdtool \
-			gd.>=20::graphics/gd
-WANTLIB += c
+WANTLIB += c rrd>=3.0 gd>=20.35
 
 RUN_DEPENDS =		\
-			gd::graphics/gd \
-			libnet::net/libnet/1.1 \
-			p5-RPC-XML::net/p5-RPC-XML \
-			p5-RRD::net/rrdtool,-perl \
-			php5-pdo_sqlite::www/php5/extensions,-pdo_sqlite \
-			php5-sqlite::www/php5/extensions,-sqlite \
-			php5-xmlrpc::www/php5/extensions,-xmlrpc \
+			graphics/gd \
+			net/libnet/1.1 \
+			net/p5-RPC-XML \
+			net/rrdtool,-perl \
+			www/php5/extensions,-pdo_sqlite \
+			www/php5/extensions,-sqlite \
+			www/php5/extensions,-xmlrpc \
 			
 PREFIX=/var/www
 
