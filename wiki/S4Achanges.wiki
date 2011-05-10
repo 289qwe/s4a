@@ -67,6 +67,12 @@
  * migrated to OpenBSD 4.8 official release
  * fixes in finding disk for data destruction
 
+=== 4.9.0 ===
+
+ * migrated to OpenBSD 4.9 official release
+ * added detector's serial number collection (DELL) and sending to the Central Server
+ * fixed updater.log rotation
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -105,6 +111,11 @@ Changes according to new data sent by detectors:
 === 4.8.0 ===
  * package for OpenBSD 4.8 official release
  * improved webinterface's snort column behavior for detectors older than 4.7.2
+
+=== 4.9.0 ===
+ * package for OpenBSD 4.9 official release
+ * added storing detectors (DELL) Serial number
+ * fixes in xmlrpc code for detectors older than 4.7.2
 
 == s4a-ca ==
 === 4.6.6 ===
