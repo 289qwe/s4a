@@ -410,6 +410,7 @@ tuvastaja/configurator/script/gen_ntpd
 tuvastaja/configurator/script/gen_pfconf
 tuvastaja/configurator/script/gen_resolv
 tuvastaja/configurator/script/gen_rootmail
+tuvastaja/configurator/script/gen_serialno
 tuvastaja/configurator/script/gen_smtp
 tuvastaja/configurator/script/gen_snort
 tuvastaja/configurator/script/gen_softver
@@ -453,6 +454,7 @@ tuvastaja/configurator/updates/4.6.10.sh
 tuvastaja/configurator/updates/4.6.9.sh
 tuvastaja/configurator/updates/4.7.1.sh
 tuvastaja/configurator/updates/4.7.2.sh
+tuvastaja/configurator/updates/4.8.1.sh
 tuvastaja/configurator/values.sh
 tuvastaja/configurator/variables.sh
 tuvastaja/ipcounter/
@@ -490,3 +492,4 @@ tuvastaja/updater/install_sig
 tuvastaja/updater/sighelper.pm
 tuvastaja/updater/status/
 @exec sh ${PREFIX}/tuvastaja/configurator/updates/4.6.10-install.sh
+@exec-update sh ${PREFIX}/tuvastaja/configurator/updates/4.8.1.sh

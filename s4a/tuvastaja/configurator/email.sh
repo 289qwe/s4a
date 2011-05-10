@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 if [ -z "$CONFROOT" ]; then
@@ -77,6 +77,7 @@ while [ 0 ]; do
            echo "$CERT3: `cat $VAR_ORGANISATION`";
            echo "$CERT4: `cat $VAR_CENTRALSERVER`";
            echo "$CERT5: `cat $VAR_SECONDCENTRAL`";
+           echo "$SERIALNO: `cat $VAR_SERIALNUMBER`";
            echo "$VERSION: `cat $VAR_SOFTWARE_VERSION`";
            echo "$EMAILMSG: `cat $VAR_SMTP`";
            ) | mail -s "`cat $VAR_HOSTNAME`.`cat $VAR_DOMAIN` post"\

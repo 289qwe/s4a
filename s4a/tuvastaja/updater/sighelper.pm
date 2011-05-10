@@ -1,13 +1,9 @@
 #!/usr/bin/perl
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
-
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 use strict;
 use warnings;
-
-
-
 
 sub my_mac()
 {
@@ -32,7 +28,6 @@ sub my_mac()
 	return($mac);
 }
 	
-
 sub check_sidfile($)
 {
 	my($filee) = @_;
@@ -137,7 +132,6 @@ sub readlinefromx($)
 	close(DATA);
 	return($ret);
 }
-
 
 
 

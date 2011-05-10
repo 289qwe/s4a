@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+/* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 // No direct access
 
@@ -149,7 +149,8 @@ $VARIABLES_MUST=array(
 	'Organisation' => 'Tuvastaja organisatsioon sertifikaadist',
 	'Fullname' => 'Tuvastaja nimi sertifikaadist',
 	'Centralserver' => 'Keskserveri aadress sertifikaadist',
-	'Software_Version' => 'Tuvastaja tarkvara versioon'
+	'Software_Version' => 'Tuvastaja tarkvara versioon',
+	'Serial' => 'Tuvastaja riistvara seerianumber'
 );
 
 $VARIABLES_CONF=array(

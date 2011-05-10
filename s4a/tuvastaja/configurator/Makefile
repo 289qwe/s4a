@@ -2,7 +2,7 @@
 # Tuvastaja konfiguratsiooni genereerimine
 #
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 VARDIR=/var/www/tuvastaja/data/conf
@@ -103,6 +103,7 @@ first:
 	sh script/gen_mrtg
 	sh script/gen_updatercron
 	sh script/gen_motd
+	sh script/gen_serialno
 
 initial:
 	sh script/gen_snort
