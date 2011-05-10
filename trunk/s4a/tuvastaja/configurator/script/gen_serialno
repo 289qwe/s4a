@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
+
+
+if [ -z "$CONFROOT" ]; then
+  CONFROOT=/var/www/tuvastaja/configurator
+fi
+if [ -z "$VARDIR" ]; then
+  VARDIR=/var/www/tuvastaja/data/conf
+fi
+
+# Include functions
+. $CONFROOT/functions.sh
+
+DELL="Dell Inc."
+PRODUCT=`/usr/local/sbin/dmidecode -s system-manufacturer`
+if [ "$PRODUCT" = "$DELL" ]; then 
+  SERIAL=`/usr/local/sbin/dmidecode -s system-serial-number` 
+else
+  SERIAL="$NOTDELL"
+fi
+
+echo "$SERIAL" > $VAR_SERIALNUMBER

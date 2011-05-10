@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 if [ -z "$CONFROOT" ]; then
@@ -36,6 +36,7 @@ echo "$CERT2: `cat $VAR_FULLNAME`" >> /tmp/show.out
 echo "$CERT3: `cat $VAR_ORGANISATION`" >> /tmp/show.out
 echo "$CERT4: `cat $VAR_CENTRALSERVER`" >> /tmp/show.out
 echo "$CERT5: `cat $VAR_SECONDCENTRAL`" >> /tmp/show.out
+echo "$SERIALNO: `cat $VAR_SERIALNUMBER`" >> /tmp/show.out
 echo "$VERSION: `cat $VAR_SOFTWARE_VERSION`" >> /tmp/show.out
 echo "\n$SHOWINFO" >> /tmp/show.out
 

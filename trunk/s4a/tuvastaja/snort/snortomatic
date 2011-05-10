@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 # snortomatic is a perl script to inspect alert.fast type logs
@@ -381,6 +381,7 @@ sub prepare_rrd_request {
 	my $snortstatus = read1frompipe("/usr/local/libexec/nagios/check_nrpe -H 127.0.0.1 -c check_snort | cut -d \" \" -f 5 | cut -d . -f 1");
 	my $snortdroprate = read1frompipe("/usr/local/bin/rrdtool lastupdate $dropraterrd | tail -1 | cut -d \" \" -f 2 | cut -d . -f 1");
 	my $mac = my_mac();
+	my $serialno = readvar("Serial.var");
 
 	if ($send_type eq "data") {
 		foreach my $k (keys %rrdstats) {
@@ -416,6 +417,7 @@ sub prepare_rrd_request {
 				'baseversion' => RPC::XML::string->new($basever), 
 				'ruleversion' => RPC::XML::int->new($siglevel),
 				'mymac' => RPC::XML::string->new($mac),
+				'serialno' => RPC::XML::string->new($serialno), 
 				'monitoringinfo' => RPC::XML::struct->new({
 					'snortstatus' => RPC::XML::int->new($snortstatus),
 					'snortdroprate' => RPC::XML::int->new($snortdroprate),
@@ -433,6 +435,7 @@ sub prepare_rrd_request {
 				'baseversion' => RPC::XML::string->new($basever), 
 				'ruleversion' => RPC::XML::int->new($siglevel),
 				'mymac' => RPC::XML::string->new($mac),
+				'serialno' => RPC::XML::string->new($serialno), 
 				'monitoringinfo' => RPC::XML::struct->new({
 					'snortstatus' => RPC::XML::int->new($snortstatus),
 					'snortdroprate' => RPC::XML::int->new($snortdroprate),
@@ -1031,4 +1034,3 @@ sub headerCallback {
 
   return length($data);
 }
-

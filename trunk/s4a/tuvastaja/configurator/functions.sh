@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 # Include variables
@@ -349,7 +349,7 @@ check_end ()
 mount_usb ()
 {
   make_dir $MOUNTDIR
-  ALLDEVS=`sysctl -n hw.disknames | sed 's/,/ /g'`
+  ALLDEVS=`sysctl -n hw.disknames | sed -e 's/:[0-9a-z]\{0,\},\{0,1\}/ /g'`
   DEVS="$ALLDEVS"
   for i in $ALLDEVS; do
     if echo $i | grep -q "^cd" || echo $i | grep -q "^fd"; then

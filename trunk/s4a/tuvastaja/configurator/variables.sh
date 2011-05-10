@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 #This file is for variables
 
@@ -105,6 +105,8 @@ CERT3="Tuvastaja organisatsioon sertifikaadist"
 CERT4="Keskserveri aadress sertifikaadist"
 CERT5="Sekundaarse keskserveri aadress sertifikaadist"
 VERSION="Tuvastaja tarkvara versiooninumber"
+SERIALNO="Tuvastaja riistvara seerianumber"
+NOTDELL="Tundmatu riistvara"
 
 DETECTORKEY="Tuvastaja salajane võti"
 DETECTORCERT="Tuvastaja sertifikaat"

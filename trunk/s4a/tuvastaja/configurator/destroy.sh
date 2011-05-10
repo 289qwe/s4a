@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 if [ -z "$CONFROOT" ]; then
@@ -14,7 +14,7 @@ fi
 . $CONFROOT/functions.sh
 
 DD="512"
-DISKS=`sysctl -n hw.disknames | sed -e 's/,/ /g'`
+DISKS=`sysctl -n hw.disknames | sed -e 's/:[0-9a-z]\{0,\},\{0,1\}/ /g'`
 for i in $DISKS; do
   if disklabel $i 2>/dev/null | grep -q "\/var\/www\/tuvastaja\/data"; then
     DISK=$i

@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.58 2010/07/21 12:27:41 edd Exp $
+# $OpenBSD: Makefile,v 1.60 2010/10/24 20:41:23 ajacoutot Exp $
 
-VERSION = 		4.8.0
+VERSION = 		4.9.0
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
@@ -18,25 +18,25 @@ PERMIT_DISTFILES_FTP =	Yes
 PATCH_DIST_STRIP =	-p0
 
 RUN_DEPENDS =		\
-			dialog::misc/dialog \
-			ipaudit::net/ipaudit \
-			iplog::net/iplog \
-			mrtg::net/mrtg \
-			nrpe::net/nagios/nrpe \
-			p5-Class-Accessor::devel/p5-Class-Accessor \
-			p5-File-Sync::devel/p5-File-Sync \
-			p5-Filesys-Df::sysutils/p5-Filesys-Df \
-			p5-GDBM_File::databases/p5-GDBM_File \
-			p5-Nagios-Plugin::net/nagios/p5-Nagios-Plugin \
-			p5-Net-CIDR::net/p5-Net-CIDR \
-			p5-Params-Validate::devel/p5-Params-Validate \
-			p5-Proc-ProcessTable::sysutils/p5-Proc-ProcessTable \
-                        p5-RPC-XML::net/p5-RPC-XML \
-                        p5-RRD::net/rrdtool,-perl \
-			p5-Time-modules::devel/p5-Time-modules \
-                        p5-WWW-Curl::www/p5-WWW-Curl \
-			php5-dba::www/php5/extensions,-dba \
-			snort::net/snort \
+			misc/dialog \
+			net/ipaudit \
+			net/iplog \
+			net/mrtg \
+			net/nagios/nrpe \
+			devel/p5-Class-Accessor \
+			devel/p5-File-Sync \
+			sysutils/p5-Filesys-Df \
+			databases/p5-GDBM_File \
+			net/nagios/p5-Nagios-Plugin \
+			net/p5-Net-CIDR \
+			devel/p5-Params-Validate \
+			sysutils/p5-Proc-ProcessTable \
+			net/p5-RPC-XML \
+			net/rrdtool,-perl \
+			devel/p5-Time-modules \
+			www/p5-WWW-Curl \
+			www/php5/extensions,-dba \
+			net/snort \
 
 PREFIX=/var/www
 

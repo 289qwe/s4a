@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 
 #this file is for calling values from defined variables file
@@ -27,6 +27,7 @@ LONGNAME="Fullname.var"
 ORG="Organisation.var"
 SECONDCENTRAL="Second_central.var"
 LOCALORG="Localorg.var"
+SERIALNUMBER="Serial.var"
 
 CANAME="cacert.crt"
 DETNAME="tuvastaja.crt"
@@ -55,6 +56,7 @@ VAR_FULLNAME=$VARDIR/$LONGNAME
 VAR_ORGANISATION=$VARDIR/$ORG
 VAR_SECONDCENTRAL=$VARDIR/$SECONDCENTRAL
 VAR_LOCALORG=$VARDIR/$LOCALORG
+VAR_SERIALNUMBER=$VARDIR/$SERIALNUMBER
 
 VARIABLES="$VAR_IFACE $VAR_IP_ADDRESS $VAR_SUBNET_MASK $VAR_DEFAULT_GATEWAY $VAR_HOSTNAME \
 $VAR_DOMAIN $VAR_NAMESERVERS $VAR_ADMIN_EMAIL $VAR_SMTP $VAR_NTP_SERVER $VAR_SNMP_SERVER \
