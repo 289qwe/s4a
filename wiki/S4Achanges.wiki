@@ -73,6 +73,11 @@
  * added detector's serial number collection (DELL) and sending to the Central Server
  * fixed updater.log rotation
 
+=== 5.0.0 ===
+
+ * migrated to OpenBSD 5.0 official release, that affected pf, php and network configurations and also disklabel usage
+ * bugfixes in snortomatic and install.site
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -116,6 +121,9 @@ Changes according to new data sent by detectors:
  * package for OpenBSD 4.9 official release
  * added storing detectors (DELL) Serial number
  * fixes in xmlrpc code for detectors older than 4.7.2
+
+=== 5.0.0 ===
+ * package for OpenBSD 5.0 official release
 
 == s4a-ca ==
 === 4.6.6 ===
