@@ -1,0 +1,219 @@
+S4A-CENTRE(8)             BSD System Manager's Manual            S4A-CENTRE(8)
+
+NNAAMMEE
+     ss44aa--cceennttrree, ss44aa--ssiigg--ccuurrrreenntt, ss44aa--ssiigg--cchheecckk, ss44aa--ssiigg--cchheecckk--ccuurrrreenntt,
+     ss44aa--ssiigg--aappppllyy, ss44aa--ssiigg--rreevvookkee -- S4A Central Server and its utilities
+
+DDEESSCCRRIIPPTTIIOONN
+     The following is a step-by-step installation guide for the S4A central
+     server.
+
+WWEEBB SSEERRVVEERR CCOONNFFIIGGUURRAATTIIOONN
+     1. To configure your Web server for S4A, symlink the sample configuration
+     file provided to the Apache configuration directory:
+           llnn --ssff //vvaarr//wwwwww//ccoonnff//ss44aa..ssaammppllee//hhttttppdd..ccoonnff //vvaarr//wwwwww//ccoonnff//hhttttppdd..ccoonnff
+
+     2. Copy the sample administration server and configuration server files:
+           ccpp //vvaarr//wwwwww//ccoonnff//ss44aa..ssaammppllee//ss44aa..ccoonnff  //vvaarr//wwwwww//ccoonnff//ss44aa//ss44aa..ccoonnff
+           ccpp //vvaarr//wwwwww//ccoonnff//ss44aa..ssaammppllee//ss44aaccoonnff..ccoonnff
+            //vvaarr//wwwwww//ccoonnff//ss44aa//ss44aaccoonnff..ccoonnff
+
+     3. Edit the file s4a.conf and change every occurrence of "YYY.YYY.YYY" to
+     the actual administration server's DNS name. Change every occurrence of
+     "XXX.XXX.XXX.XXX" to the actual administration server's IP address.
+
+     4. Edit the file s4aconf.conf and change every occurrence of
+     "YYY.YYY.YYY" to the actual configuration/XML-RPC server's DNS name.
+     Change every occurrence of "XXX.XXX.XXX.XXX" to the actual configura-
+     tion/XML-RPC server's IP address.
+
+UUSSEERR IINNTTEERRFFAACCEE CCOONNFFIIGGUURRAATTIIOONN
+     5. To ensure the user interface works correctly, set webserver localtime
+     creating corresponding symbolic link to
+           //vvaarr//wwwwww//eettcc//llooccaallttiimmee
+
+WWEEBB SSEERRVVEERR KKEEYYSS
+     6. Generate SSL keys for the Web server -- change to /usr/local/s4a-cen-
+     tre/keygen and run the command:
+           sshh kkeeyyggeenn..sshh _<_c_e_n_t_r_a_l_-_s_e_r_v_e_r_-_n_a_m_e_>
+     Where <central-server-name> is the administration server's DNS name.
+
+     7. Generate a certificate request for the configuration server certifi-
+     cate:
+           sshh wweebbRReeqq..sshh _<_c_o_n_f_s_e_r_v_-_n_a_m_e_>
+     Where <confserv-name> is configuration server's DNS name. The resulting
+     confservkey.req file must be transported to the CA for certification.
+
+     8. Edit the file /etc/rc.conf.local and add the following line:
+           httpd_flags="-DSSL"
+
+     9. Create the Web server password file:
+           hhttddiiggeesstt [-c] /var/www/conf/webdigest "S4A Central Server"
+           _<_u_s_e_r_n_a_m_e_>
+
+     Where <username> (such as "webadmin") is the name under which the Web
+     user interface will be accessed.  If the password file already exists,
+     omit the -c option. To enable the activation/deactivation of detectors
+     over the Web-based interface, create the user "webroot".
+
+WWEEBB SSEERRVVEERR DDAATTAABBAASSEE
+     10. Create the Web server database:
+           sshh //vvaarr//wwwwww//ddaattaabbaassee//ccrreeaattee__ddaattaabbaassee..sshh
+
+SSIIGGNNAATTUURREE DDIISSTTRRIIBBUUTTIIOONN MMOODDUULLEE
+     11. Configure the signature distribution module by editing the root
+     crontab and adding the following entries:
+
+
+           37 04 * * * find /var/www/confserv/signatures -maxdepth 1 -type f
+           -name "signatures-*.tgz" -mtime +30 -print0 | xargs -r -0 rm -f
+
+SSYYSSLLOOGG
+     12. Edit /etc/rc.conf.local and add the following line:
+           syslogd_flags="-a /var/www/dev/log"
+
+     13. Edit /etc/syslog.conf and add the following entry (separate columns
+     with tabs):
+           local3.info              /var/www/confserv-logs/confserv.log
+
+     14. Edit /etc/newsyslog.conf and add the following line:
+           /var/www/confserv-logs/confserv.log      root:www  644 52 512 *
+
+     15. Restart syslog:
+           ppkkiillll ssyyssllooggdd
+           ssyyssllooggdd --aa //vvaarr//wwwwww//ddeevv//lloogg
+
+     MMoorree aaddvvaanncceedd ssyysslloogg ccoonnffiigguurraattiioonnss aarree ppoossssiibbllee.. For instance, to redi-
+     rect the output of the s4a-writer and s4a-aggregator subprocesses to sep-
+     arate log files, use the following settings:
+           !!s4a-writer
+           local3.info         /var/log/s4a-writer.log
+           !*
+           !!s4a-aggregator
+           local3.info         /var/log/s4a-aggregator.log
+           !*
+           local3.info         /var/www/confserv-logs/confserv.log
+
+     And change /etc/newsyslog.conf as follows:
+           /var/log/s4a-writer.log                 root:www  644 52 512 *
+           /var/log/s4a-aggregator.log             root:www  644 52 512 *
+           /var/www/confserv-logs/confserv.log     root:www  644 52 512 *
+
+CCEERRTTIIFFIICCAATTEE IINNSSTTAALLLLAATTIIOONN
+     16. Copy the certificate files received from the CA to /etc/ssl/
+
+FFIINNAALLIIZZIINNGG
+     17. To conclude the configuration, restart httpd:
+           aappaacchheeccttll ssttoopp
+           aappaacchheeccttll ssttaarrtt
+
+IINNSSTTAALLLLIINNGG SSIIGGNNAATTUURREESS
+     Installing signatures is necessary for the generation of the file
+     /var/www/etc/s4a-map. The directory /usr/local/s4a-centre/sigsupporter
+     contains utilities for managing signature sets.
+
+   ss44aa--ssiigg--ccuurrrreenntt
+     Returns the file name of the latest signature set.
+
+   ss44aa--ssiigg--cchheecckk--ccuurrrreenntt
+     Verifies the current signature set and outputs the results.
+
+   ss44aa--ssiigg--cchheecckk <<ffiillee>>
+     Takes as input a .tar file containing signatures, and compares it to the
+     current signature set.  The output is a list of differences (additions
+     and removals) between the two.
+
+   ss44aa--ssiigg--aappppllyy <<ffiillee>>
+     Takes as input a .tar file containing signatures and applies the changes
+     within to create a new central server configuration. If a problem occurs,
+     use the s4a-sig-revoke script to undo the changes.
+
+   ss44aa--ssiigg--rreevvookkee
+     Removes the current signature set and replaces it with an earlier one.
+     Use it to restore the previous signature set in case the new set doesn't
+     work.
+
+RRUUNNNNIINNGG SS44AADD AANNDD SS44AA--DDRRAAWW
+     To complete the installation of s4a-centre, set up and run the s4ad dae-
+     mon and the s4a-draw cronjob as follows.
+
+     1) Check that the directory /usr/local/share/s4a exists and the partition
+     has enough free space.  To store the RRD data of 100 detectors and 1500
+     signatures, approximately 5.4 GB of free space is needed.
+
+     2) Run /usr/local/bin/s4ad and then verify with 'ps' that it is running.
+     Check your log files for more information -- send kkiillll --UUSSRR11 to s4ad to
+     force logging, and turn on the llooccaall33..ddeebbuugg facility to log even more
+     information.
+
+     3) Check that the socket /var/www/tmp/s4a exists and is readable to user
+     _s4ad.
+
+     4) Check that the file /tmp/s4ad.lock exists.
+
+     5) Check that the directory /usr/local/share/s4a/detectors exists and is
+     writable to user _s4ad.
+
+     6) Install the s4a-draw cronjob, which generates PNG graphs for the Web
+     page:
+           */5 * * * * /usr/local/bin/s4a-draw
+
+MMAANNAAGGIINNGG DDEETTEECCTTOORRSS
+     To add new detectors to the central server database, run the command:
+           //vvaarr//wwwwww//ddaattaabbaassee//uuppddaattee__ddbb..pphhpp [[--bb]] --ff <<cceerrttaarrcchhiivvee>>
+     Where <certarchive> is tar.gz-formatted archive that consists of <cert-
+     file> named tuvastaja.crt.  <certfile> tuvastaja.crt must be an X.509
+     certificate with the following Distinguished Name fields set:
+           countryName
+           localityName
+           organizationName
+           organizationalUnitName
+           commonName
+     If '-b' option is set, then the certificate will be added without asking
+     confirmation.
+
+MMAANNAAGGIINNGG PPAATTCCHHEESS
+     The following steps must be carried out in another computer.
+
+   PPrreelliimmiinnaarryy sstteeppss
+     1) You will receive two packaging scripts from the software developer.
+     Unpack them to a directory of your choice, such as /tmp, which also cre-
+     ates the s4a-patch subdirectory.
+
+     2) Use 'genpatchkey.sh' to create a private key (s4apatch.key) and a cer-
+     tificate request for packaging.
+
+     3) Transport the certificate request to the S4A Certification Authority
+     to receive a certificate (s4apatch.pem). Copy both the .key and .pem to
+     /tmp/s4a-patch
+
+   PPaacckkaaggiinngg
+     It is assumed that you have received from the software developer an ar-
+     chive (such as 4.6.1.tar.gz) containing BSD packages to be signed.
+
+     1) Unpack the archive to a temporary directory:
+           tar xzf 4.6.1.tar.gz -C /tmp/s4a-patch
+
+     2) Install each package in the archive:
+           pkg_add /tmp/s4a-patch/4.6.1/packages/filename.tgz
+
+     3) Change to /tmp/s4a-patch and sign the packages:
+           pkg_create -f /var/db/pkg/package-name/+CONTENTS -s x509 -s
+           s4apatch.pem -s s4apatch.key
+     Where s4apatch.pem is the certificate and s4apatch.key the key for pack-
+     aging.
+
+     4) Replace the original packages with new, signed packages:
+           mv package-name.tgz /tmp/s4a-patch/4.6.1/packages/package-name.tgz
+
+     5) Change to 4.6.1 and create a new patch set:
+           ../s4apatch.sh
+
+     6) Transport the new patch set to the central server.
+
+AAUUTTHHOORRSS
+     The ss44aa--cceennttrree package is maintained by:
+           Cybernetica AS
+           http://www.cybernetica.eu
+
+OpenBSD 5.0                    November 10, 2011                   OpenBSD 5.0

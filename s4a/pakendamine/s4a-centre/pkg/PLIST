@@ -1,55 +1,16 @@
 @comment $OpenBSD$
 @newuser _s4ad:699:www:daemon:S4ADaemon Account:/nonexistent:/sbin/nologin
-conf/s4a/
-conf/s4a.sample/
-conf/s4a.sample/httpd.conf
-conf/s4a.sample/s4a.conf
-conf/s4a.sample/s4aconf.conf
-confserv/
-confserv-logs/
-confserv/common-functions.php
-confserv/index.html
-confserv/patches/
-confserv/signatures/
-confserv/xmlrpc.php
-database/
-database/activate_detector.php
-database/create_database.sh
-database/datamodel.sql
-database/datamodel_4.7.2-update.sql
-database/datamodel_4.8.1-update.sql
-database/show_detector.php
-database/triggerts.sql
-database/update_database_4.7.2.sh
-database/update_database_4.8.1.sh
-database/update_db.php
-etc/
-s4a-view/
-s4a-view/activate.php
-s4a-view/detector.php
-@owner _s4ad
-@group www
-s4a-view/detectors/
-@owner
-@group
-s4a-view/detectors.php
-s4a-view/images/
-s4a-view/images/icon_alert.png
-s4a-view/images/icon_error.gif
-s4a-view/images/icon_off.gif
-s4a-view/images/icon_ok.png
-s4a-view/index.html
-s4a-view/na-det.png
-s4a-view/na-sig.png
-s4a-view/observer.php
-s4a-view/s4a.css
-@owner _s4ad
-@group www
-s4a-view/sigs/
-@owner
-tmp/
-@group
-@cwd /usr/local
+@bin bin/s4a-draw
+@bin bin/s4ad
+@exec-update sh ${PREFIX}/database/update_database_4.7.2.sh
+@exec-update sh ${PREFIX}/database/update_database_4.8.1.sh
+@man man/cat8/s4a-centre.0
+@man man/cat8/s4a-sig-apply.0
+@man man/cat8/s4a-sig-check-current.0
+@man man/cat8/s4a-sig-check.0
+@man man/cat8/s4a-sig-current.0
+@man man/cat8/s4a-sig-revoke.0
+s4a-centre/
 s4a-centre/keygen/
 s4a-centre/keygen/keygen.sh
 s4a-centre/keygen/webReq.sh
@@ -61,13 +22,53 @@ s4a-centre/sigsupporter/s4a-sig-check-current
 s4a-centre/sigsupporter/s4a-sig-current
 s4a-centre/sigsupporter/s4a-sig-revoke
 s4a-centre/sigsupporter/sighelper.pm
-@man man/cat8/s4a-centre.0
-@man man/cat8/s4a-sig-current.0
-@man man/cat8/s4a-sig-check-current.0
-@man man/cat8/s4a-sig-check.0
-@man man/cat8/s4a-sig-apply.0
-@man man/cat8/s4a-sig-revoke.0
-@bin bin/s4a-draw
-@bin bin/s4ad
-@exec-update sh ${PREFIX}/database/update_database_4.7.2.sh
-@exec-update sh ${PREFIX}/database/update_database_4.8.1.sh
+share/s4a/
+@owner _s4ad
+share/s4a/detectors/
+@owner
+@sample /var/www/conf/s4a/
+@sample /var/www/conf/s4a.sample/
+@sample /var/www/confserv-logs/
+@sample /var/www/confserv/
+@sample /var/www/confserv/patches/
+@sample /var/www/confserv/signatures/
+@sample /var/www/database/
+@sample /var/www/etc/
+@sample /var/www/s4a-view/
+@owner _s4ad
+@group www
+@sample /var/www/s4a-view/detectors/
+@sample /var/www/s4a-view/sigs/
+@owner
+@sample /var/www/tmp/
+@group
+@sample /var/www/s4a-view/images/
+@cwd /var/www/
+conf/s4a.sample/httpd.conf
+conf/s4a.sample/s4a.conf
+conf/s4a.sample/s4aconf.conf
+confserv/common-functions.php
+confserv/index.html
+confserv/xmlrpc.php
+database/activate_detector.php
+database/create_database.sh
+database/datamodel.sql
+database/datamodel_4.7.2-update.sql
+database/datamodel_4.8.1-update.sql
+database/show_detector.php
+database/triggerts.sql
+database/update_database_4.7.2.sh
+database/update_database_4.8.1.sh
+database/update_db.php
+s4a-view/activate.php
+s4a-view/detector.php
+s4a-view/detectors.php
+s4a-view/images/icon_alert.png
+s4a-view/images/icon_error.gif
+s4a-view/images/icon_off.gif
+s4a-view/images/icon_ok.png
+s4a-view/index.html
+s4a-view/na-det.png
+s4a-view/na-sig.png
+s4a-view/observer.php
+s4a-view/s4a.css
