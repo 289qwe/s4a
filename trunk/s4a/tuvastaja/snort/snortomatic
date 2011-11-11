@@ -109,7 +109,10 @@ my $inputsize = 0;
 my $processedlines = 0;
 
 openlog('snortomatic', 'ndelay,pid', LOG_LOCAL3);
-die syslog(LOG_INFO, "No version set. Exiting") unless -e $patchlevel;
+if (! -e $patchlevel) {
+	syslog(LOG_INFO, "No version set. Exiting");
+	die "No version set, stopped"
+}
 syslog(LOG_DEBUG, "Started inspection");
 
 if (! -d $gdbm_root) {

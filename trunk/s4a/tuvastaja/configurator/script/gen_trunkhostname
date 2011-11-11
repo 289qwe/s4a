@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 if [ -z "$CONFROOT" ]; then
   CONFROOT=/var/www/tuvastaja/configurator
@@ -17,7 +17,7 @@ TRUNKHOST=/etc/hostname.trunk0
 
 # Create hostname files
 for dev in $TRUNKNET; do
-  print "up description $MONITORNET\n!ifconfig \$if -inet6" > /etc/hostname.$dev
+  print "up description $MONITORNET group trunk \n!ifconfig \$if -inet6" > /etc/hostname.$dev
   chmod 640 /etc/hostname.$dev
 done
 

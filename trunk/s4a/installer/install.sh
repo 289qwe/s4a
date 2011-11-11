@@ -2,8 +2,8 @@
 
 # Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
 
-MAJ=4			# Version major number
-MIN=9			# Version minor number
+MAJ=5			# Version major number
+MIN=0			# Version minor number
 arch=i386		# Architecture
 TZ=Europe/Tallinn	# Time zones are in /usr/share/zoneinfo
 SETS="comp man xbase site"
@@ -45,7 +45,7 @@ fi
 echo Starting installation...
 
 # Find disks
-##ALLDRIVES=`sysctl -n hw.disknames | sed -e 's/,/ /g'` 
+#ALLDRIVES=`sysctl -n hw.disknames | sed -e 's/,/ /g'` 
 # Probably in 4.9
 ALLDRIVES=`sysctl -n hw.disknames | sed -e 's/:[0-9a-z]\{0,\},\{0,1\}/ /g'` 
 # indeed.

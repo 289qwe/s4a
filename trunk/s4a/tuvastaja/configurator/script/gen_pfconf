@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 if [ -z "$CONFROOT" ]; then
   CONFROOT=/var/www/tuvastaja/configurator
@@ -42,12 +42,8 @@ me = "$IP"
 set skip on lo
 
 # skip trunk devices for performance
-set skip on trunk0
+set skip on trunk
 END
-
-for dev in $TRUNKDEVS; do
-  echo "set skip on $dev" >> $PFCONF
-done
 
 echo >> $PFCONF
 echo 'block all' >> $PFCONF

@@ -147,7 +147,7 @@ CLEARWARN="HOIATUS! JÄTKAMISEL KOGU KÕVAKETAS (ka andmepartitsioon) TÜHJENDATAKS
 KAS TÕESTI JÄTKATA?"
 CLEAR="Hävitan kõvakettalt andmeid.\nSelleks võib kuluda kuni 24 tundi (hävitamiskiirusel 1.5 MB/sec).\n\
 Lõpuks võib ilmneda 'kernel panic'.\nSee tähendab, et kogu kõvaketas on tühi\nning arvuti tuleb Power nupust välja lülitada."
-CLEARDATA="Kirjutan andmepartitsiooni nime üle.\nSelle valmides võib ilmneda 'kernel panic'.\n\
+CLEARDATA="Kustutan andmepartitsiooni kettalt.\nSelle valmides kuvatakse ekraanile: '> > > No label changes.'\n\
 See tähendab, et operatsioon õnnestus\nning arvuti tuleb Power nupust välja lülitada.\n\n\
 Arvutile saab teha siis \"puhta\" paigalduse."
 EMPTY="Kõvaketas on tühi; lülita arvuti Power nupust välja"
@@ -166,5 +166,5 @@ IP7ASK="$IP7\nkujul 192.168.1.1"
 SNMPASK="$SNMP\nkujul 192.168.1.1"
 SNMPCOMMUNITYASK="$SNMPCOMMUNITY\nnäiteks 'tuvastaja'"
 
-MAINNET="Haldus"
-MONITORNET="Monitor"
+MAINNET="haldus"
+MONITORNET="monitor"

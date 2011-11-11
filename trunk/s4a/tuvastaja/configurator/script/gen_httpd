@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 if [ -z "$CONFROOT" ]; then
   CONFROOT=/var/www/tuvastaja/configurator
@@ -39,14 +39,16 @@ if [ ! -e /var/www/bin/rrdtool ]; then
 fi
 
 # For php
-if [ ! -s $HTTPROOT/php.ini ]; then
-  ln -fs /usr/local/share/examples/php5/php.ini-recommended $HTTPROOT/php.ini
+if [ -s $HTTPROOT/modules/php5.conf ]; then
+  rm -f $HTTPROOT/modules/php5.conf
 fi
-if [ ! -s $HTTPROOT/modules/php5.conf ]; then
-  ln -fs /usr/local/share/examples/php5/php5.conf $HTTPROOT/modules/php5.conf
+
+if [ ! -s $HTTPROOT/modules/php.conf ]; then
+  ln -fs $HTTPROOT/modules.sample/php-5.3.conf $HTTPROOT/modules/php.conf
 fi
-if [ ! -s $HTTPROOT/php5/dba.ini ]; then
-  ln -fs $HTTPROOT/php5.sample/dba.ini $HTTPROOT/php5/dba.ini
+
+if [ ! -s /etc/php-5.3/dba.ini ]; then
+  ln -fs /etc/php-5.3.sample/dba.ini /etc/php-5.3/dba.ini
 fi
 
 # Create tuvastaja.conf
