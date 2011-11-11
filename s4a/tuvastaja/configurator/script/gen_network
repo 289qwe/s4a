@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/ */
 
 if [ -z "$CONFROOT" ]; then
   CONFROOT=/var/www/tuvastaja/configurator
@@ -20,5 +20,5 @@ NETHOST=/etc/hostname.$DEV
 
 # Set network interface 
 
-echo "inet $IP $MASK NONE description $MAINNET" > $NETHOST
+echo "inet $IP $MASK NONE description $MAINNET group $MAINNET" > $NETHOST
 chmod 640 $NETHOST

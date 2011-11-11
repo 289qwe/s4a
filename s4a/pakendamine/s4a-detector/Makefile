@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.60 2010/10/24 20:41:23 ajacoutot Exp $
 
-VERSION = 		4.9.0
+VERSION = 		5.0.0
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 
@@ -35,7 +35,8 @@ RUN_DEPENDS =		\
 			net/rrdtool,-perl \
 			devel/p5-Time-modules \
 			www/p5-WWW-Curl \
-			www/php5/extensions,-dba \
+			lang/php/5.3,-dba \
+			sysutils/dmidecode \
 			net/snort \
 
 PREFIX=/var/www

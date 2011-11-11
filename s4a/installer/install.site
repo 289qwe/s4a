@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+# Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
 
 
 # Install all the neccessary software
@@ -24,10 +24,13 @@ done
 
 # Make neccessary operations after install, before first login 
 export TERM=xterm-color
+if ! grep -q "^echo '.'$" /etc/rc.local; then
+  echo "echo '.'" >> /etc/rc.local
+fi
 cat /etc/rc.local | sed -e "s/^echo '.'$//g" > /tmp/rc.local
 mv /tmp/rc.local /etc/rc.local
 cat <<EOF >>/etc/rc.local
-if [ ! -f /root/.firstapache ]; then
+if [ ! -e /root/.firstapache ]; then
   cd /var/www/tuvastaja/configurator
   sh postinstall.sh
 fi

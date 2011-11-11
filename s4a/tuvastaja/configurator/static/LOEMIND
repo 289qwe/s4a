@@ -1,18 +1,18 @@
-httpd.conf - httpd konfiguratsioon tuvastaja tarvis. L‰heb failiks 
+httpd.conf - httpd konfiguratsioon tuvastaja tarvis. L√§heb failiks 
 /var/www/conf/httpd.conf
 
-aliases - maili aliaste fail, l‰heb failiks /etc/mail/aliases
+aliases - maili aliaste fail, l√§heb failiks /etc/mail/aliases
 
-nrpe.cfg - nrpe konfifail, l‰heb failiks /etc/nrpe.cfg
+nrpe.cfg - nrpe konfifail, l√§heb failiks /etc/nrpe.cfg
 
-sendmail_* - sendmaili konfifaili staatilised osad, l‰hevad failiks /usr/share/sendmail/cf/$hostname.mc
+sendmail_* - sendmaili konfifaili staatilised osad, l√§hevad failiks /usr/share/sendmail/cf/$hostname.mc
 
-syslog.conf - syslogi konfifail. l‰heb failiks /etc/syslog.conf
+syslog.conf - syslogi konfifail. l√§heb failiks /etc/syslog.conf
 
-newsyslog.conf - newsyslogi konfifail. l‰heb failiks /etc/newsyslog.conf
+newsyslog.conf - newsyslogi konfifail. l√§heb failiks /etc/newsyslog.conf
 
-sshd_config - ssh konfifail, l‰heb failiks /etc/ssh/sshd_config
+sshd_config - ssh konfifail, l√§heb failiks /etc/ssh/sshd_config
 
-variables.conf - snorti lokaalse konfi staatiline osa, l‰heb failiks /var/www/tuvastaja/data/snort/localconf/variables.conf
+variables.conf - snorti lokaalse konfi staatiline osa, l√§heb failiks /var/www/tuvastaja/data/snort/localconf/variables.conf
 
-.profile - terminali konfifial, l‰heb failiks /root/.profile
+.profile - terminali konfifial, l√§heb failiks /root/.profile

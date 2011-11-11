@@ -37,7 +37,11 @@ while [ 0 ]; do
     "2") $D --title "$TITLE" --infobox "$CLEARDATA" 15 80
          kill_all_and_umount_data "$DISK"
 
-         disklabel -d -w "$DISK"d
+         disklabel -E "$DISK" <<EOF
+d d
+w
+q
+EOF
          end_of_story;;
     "3") $D --title "$TITLE" --infobox "$CLEAR" 15 80
          kill_all_and_umount_data "$DISK"
