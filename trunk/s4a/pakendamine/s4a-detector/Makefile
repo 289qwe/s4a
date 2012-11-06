@@ -1,6 +1,6 @@
 # $OpenBSD: Makefile,v 1.60 2010/10/24 20:41:23 ajacoutot Exp $
 
-VERSION = 		5.0.0
+VERSION = 		5.2.0
 COMMENT =		S4A intrusion detection software
 DISTNAME =		s4a-detector-${VERSION}
 

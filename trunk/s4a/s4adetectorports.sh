@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
+# Copyright (C) 2012, Cybernetica AS, http://www.cybernetica.eu/
 
 # See skript pakib tuvastaja failid kokku siia samma kataloogi
 # nii, et see pakk tuleb toimetada sinna, kus toimub tuvastaja
@@ -11,7 +11,7 @@ ROOT=$PWD
 DET=s4a-detector
 
 LEVEL=`grep "echo [0-9]* > \\$(PATCHLEVEL)" $ROOT/tuvastaja/configurator/Makefile | cut -d " " -f 2`
-VER=5.0.$LEVEL
+VER=5.2.$LEVEL
 
 ARCHIVE=$DET-$VER.tar.gz
 
