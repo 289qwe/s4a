@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# /* Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/ */
+# /* Copyright (C) 2012, Cybernetica AS, http://www.cybernetica.eu/ */
 
 if [ -z "$CONFROOT" ]; then
   CONFROOT=/var/www/tuvastaja/configurator
@@ -97,12 +97,15 @@ fi
 # For Snort Drop Rate
 if ! grep -q -R "^preprocessor perfmonitor:" $SNORTDATA/conf/preprocessors.conf; then
   echo "`grep -A1 "^preprocessor perfmonitor:" static/preprocessors.conf`" >> $SNORTDATA/conf/preprocessors.conf
+elif grep -q -R "\/var\/www\/tuvastaja\/data\/snort-logs\/snortstats.log" $SNORTDATA/conf/preprocessors.conf; then
+  sed -e "s/\/var\/www\/tuvastaja\/data\/snort-logs\/snortstats.log/snortstats.log/g" $SNORTDATA/conf/preprocessors.conf > /tmp/preprocessors.conf
+  mv /tmp/preprocessors.conf $SNORTDATA/conf/preprocessors.conf
 fi
 
 # Set localnets and then paste static variables-conf
 if [ -s $VAR_LOCALNETS ]; then
   if [ ! -z "$HOMENET" ]; then
-    VAR="var HOME_NET ["
+    VAR="ipvar HOME_NET ["
     SEPAR=""
     for a in $HOMENET; do
       VAR="$VAR$SEPAR$a"

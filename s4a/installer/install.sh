@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Copyright (C) 2011, Cybernetica AS, http://www.cybernetica.eu/
+# Copyright (C) 2012, Cybernetica AS, http://www.cybernetica.eu/
 
 MAJ=5			# Version major number
-MIN=0			# Version minor number
+MIN=2			# Version minor number
 arch=i386		# Architecture
 TZ=Europe/Tallinn	# Time zones are in /usr/share/zoneinfo
 SETS="comp man xbase site"
