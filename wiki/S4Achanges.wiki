@@ -78,6 +78,12 @@
  * migrated to OpenBSD 5.0 official release, that affected pf, php and network configurations and also disklabel usage
  * bugfixes in snortomatic and install.site
 
+=== 5.2.0 ===
+
+ * migrated to OpenBSD 5.2 official release
+ * updated to the latest Snort 2.9.3.1 which requires daq 1.1.1 and libdnet 1.12
+ * Snort Drop Rate preprocessor (perfmonitor) has to be described considering of chroot that snort runs
+
 == s4a-centre ==
 === 4.6.2 ===
 
@@ -124,6 +130,12 @@ Changes according to new data sent by detectors:
 
 === 5.0.0 ===
  * package for OpenBSD 5.0 official release
+
+=== 5.2.0 ===
+ * package for OpenBSD 5.2 official release
+ * the environment variable TZ has to be set because of the s4a-centre database php-5.3 commandline scripts.
+ * removed lang/php/5.3,-pdo_sqlite dependency from s4a-centre package because of the sqlite functionality movement to the OpenBSD base.
+ * updated s4a-centre manual page
 
 == s4a-ca ==
 === 4.6.6 ===
