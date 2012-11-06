@@ -1,8 +1,8 @@
-#!/usr/local/bin/php
+#!/usr/local/bin/php-5.3
 <?php
 
 /*
- * Copyright (C) 2010, Cybernetica AS, http://www.cybernetica.eu/
+ * Copyright (C) 2012, Cybernetica AS, http://www.cybernetica.eu/
  * */
 
 $dbname = "/var/www/database/s4aconf.db";
