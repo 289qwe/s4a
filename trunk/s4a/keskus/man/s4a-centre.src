@@ -1,6 +1,6 @@
 .Dd $Mdocdate$
 .Dt S4A-CENTRE 8
-.Os OpenBSD 5.0
+.Os OpenBSD 5.2
 .Sh NAME
 .Nm s4a-centre ,
 .Nm s4a-sig-current ,
@@ -30,6 +30,8 @@ of "XXX.XXX.XXX.XXX" to the actual configuration/XML-RPC server's IP address.
 .Sh USER INTERFACE CONFIGURATION
 5. To ensure the user interface works correctly, set webserver localtime creating corresponding symbolic link to
 .D1 Nm /var/www/etc/localtime
+.Pp
+and export environment variable \fBTZ\fP that corresponds to system's current timezone.
 .Sh WEB SERVER KEYS
 6. Generate SSL keys for the Web server -- change to /usr/local/s4a-centre/keygen and run
 the command:
