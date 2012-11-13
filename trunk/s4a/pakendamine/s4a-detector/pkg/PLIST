@@ -455,6 +455,7 @@ tuvastaja/configurator/updates/4.6.9.sh
 tuvastaja/configurator/updates/4.7.1.sh
 tuvastaja/configurator/updates/4.7.2.sh
 tuvastaja/configurator/updates/4.8.1.sh
+tuvastaja/configurator/updates/5.2.0-install.sh
 tuvastaja/configurator/values.sh
 tuvastaja/configurator/variables.sh
 tuvastaja/ipcounter/
@@ -492,4 +493,5 @@ tuvastaja/updater/install_sig
 tuvastaja/updater/sighelper.pm
 tuvastaja/updater/status/
 @exec sh ${PREFIX}/tuvastaja/configurator/updates/4.6.10-install.sh
+@exec sh ${PREFIX}/tuvastaja/configurator/updates/5.2.0-install.sh
 @exec-update sh ${PREFIX}/tuvastaja/configurator/updates/4.8.1.sh
