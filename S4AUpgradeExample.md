@@ -1,0 +1,1 @@
+[Here](http://imgur.com/a/ccwp5) you can find a tutorial how to upgrade your s4a-detector to the latest software available.
